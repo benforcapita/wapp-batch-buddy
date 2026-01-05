@@ -3,14 +3,14 @@ export interface Contact {
   name: string;
   phone: string;
   tags: string[];
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export interface MessageTemplate {
   id: string;
   name: string;
   content: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export interface Campaign {
@@ -20,10 +20,10 @@ export interface Campaign {
   contacts: string[];
   template?: string;
   message: string;
-  scheduledAt?: Date;
+  scheduledAt?: Date | string;
   sentCount: number;
   totalCount: number;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 export interface MessageLog {
@@ -34,7 +34,7 @@ export interface MessageLog {
   contactPhone: string;
   message: string;
   status: 'pending' | 'sent' | 'delivered' | 'failed';
-  sentAt: Date;
+  sentAt: Date | string;
   error?: string;
 }
 

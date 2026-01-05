@@ -33,24 +33,26 @@ interface AppState {
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
+const getDefaultTemplates = (): MessageTemplate[] => [
+  {
+    id: '1',
+    name: 'Welcome Message',
+    content: 'Hello {{name}}! Welcome to our service. We\'re excited to have you!',
+    createdAt: new Date(),
+  },
+  {
+    id: '2',
+    name: 'Promotion',
+    content: 'Hi {{name}}! 🎉 Don\'t miss our special offer this week. Use code SAVE20 for 20% off!',
+    createdAt: new Date(),
+  },
+];
+
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       contacts: [],
-      templates: [
-        {
-          id: '1',
-          name: 'Welcome Message',
-          content: 'Hello {{name}}! Welcome to our service. We\'re excited to have you!',
-          createdAt: new Date(),
-        },
-        {
-          id: '2',
-          name: 'Promotion',
-          content: 'Hi {{name}}! 🎉 Don\'t miss our special offer this week. Use code SAVE20 for 20% off!',
-          createdAt: new Date(),
-        },
-      ],
+      templates: [],
       campaigns: [],
       logs: [],
       settings: {
@@ -132,6 +134,12 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'whatsapp-cms-storage',
+      onRehydrateStorage: () => (state) => {
+        // Add default templates if none exist after rehydration
+        if (state && state.templates.length === 0) {
+          state.templates = getDefaultTemplates();
+        }
+      },
     }
   )
 );
