@@ -62,12 +62,12 @@ export default function Templates() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between animate-fade-in">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('messageTemplates')}</h1>
-            <p className="mt-1 text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('messageTemplates')}</h1>
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
               {t('createReusable')}
             </p>
           </div>
@@ -79,12 +79,12 @@ export default function Templates() {
             }
           }}>
             <DialogTrigger asChild>
-              <Button variant="whatsapp">
+              <Button variant="whatsapp" size="sm" className="sm:size-default w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 {t('newTemplate')}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-[95vw] sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>{editingId ? t('editTemplate') : t('newTemplate')}</DialogTitle>
               </DialogHeader>
@@ -120,42 +120,42 @@ export default function Templates() {
         </div>
 
         {/* Templates Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => (
             <div
               key={template.id}
-              className="rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:shadow-md animate-slide-up"
+              className="rounded-xl border border-border bg-card p-4 sm:p-5 transition-all duration-300 hover:shadow-md animate-slide-up"
             >
-              <div className="flex items-start justify-between">
-                <h3 className="font-semibold text-card-foreground">{template.name}</h3>
-                <div className="flex gap-1">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-semibold text-card-foreground text-sm sm:text-base truncate">{template.name}</h3>
+                <div className="flex gap-1 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleCopy(template.content)}
-                    className="h-8 w-8"
+                    className="h-7 w-7 sm:h-8 sm:w-8"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEdit(template)}
-                    className="h-8 w-8"
+                    className="h-7 w-7 sm:h-8 sm:w-8"
                   >
-                    <Edit2 className="h-4 w-4" />
+                    <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => removeTemplate(template.id)}
-                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground line-clamp-4">
+              <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-4">
                 {template.content}
               </p>
             </div>
@@ -163,8 +163,8 @@ export default function Templates() {
         </div>
 
         {templates.length === 0 && (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center animate-fade-in">
-            <p className="text-muted-foreground">{t('noTemplatesYet')}</p>
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 sm:p-12 text-center animate-fade-in">
+            <p className="text-sm sm:text-base text-muted-foreground">{t('noTemplatesYet')}</p>
           </div>
         )}
       </div>

@@ -106,22 +106,22 @@ export default function Contacts() {
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between animate-fade-in">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('contacts')}</h1>
-            <p className="mt-1 text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('contacts')}</h1>
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
               {t('manageContacts')}
             </p>
           </div>
           <div className="flex gap-2">
             <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" size="sm" className="sm:size-default">
                   <Upload className="h-4 w-4" />
-                  {t('import')}
+                  <span className="hidden sm:inline">{t('import')}</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-[95vw] sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{t('importContactsTitle')}</DialogTitle>
                 </DialogHeader>
@@ -144,12 +144,12 @@ export default function Contacts() {
 
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
-                <Button variant="whatsapp">
+                <Button variant="whatsapp" size="sm" className="sm:size-default">
                   <Plus className="h-4 w-4" />
-                  {t('addContact')}
+                  <span className="hidden sm:inline">{t('addContact')}</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-[95vw] sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{t('addNewContact')}</DialogTitle>
                 </DialogHeader>

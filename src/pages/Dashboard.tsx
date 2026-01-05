@@ -20,38 +20,38 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">{t('dashboard')}</h1>
-          <p className="mt-1 text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('dashboard')}</h1>
+          <p className="mt-1 text-sm sm:text-base text-muted-foreground">
             {t('welcomeBack')}
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title={t('totalContacts')}
             value={totalContacts}
-            icon={<Users className="h-5 w-5" />}
+            icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
             trend={{ value: 12, isPositive: true }}
           />
           <StatsCard
             title={t('campaignsLabel')}
             value={totalCampaigns}
-            icon={<Send className="h-5 w-5" />}
+            icon={<Send className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatsCard
             title={t('messagesSent')}
             value={messagesSent}
-            icon={<CheckCircle2 className="h-5 w-5" />}
+            icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
             trend={{ value: 8, isPositive: true }}
           />
           <StatsCard
             title={t('pending')}
             value={pendingMessages}
-            icon={<Clock className="h-5 w-5" />}
+            icon={<Clock className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
         </div>
 
