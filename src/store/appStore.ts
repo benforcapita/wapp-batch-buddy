@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { Contact, MessageTemplate, Campaign, MessageLog, Settings } from '@/types';
 
 interface AppState {
@@ -29,9 +28,14 @@ interface AppState {
   
   // Settings actions
   updateSettings: (settings: Partial<Settings>) => void;
+  
+  // Persistence
+  loadFromStorage: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
+
+const STORAGE_KEY = 'whatsapp-cms-data';
 
 const defaultTemplates: MessageTemplate[] = [
   {
@@ -55,40 +59,89 @@ const defaultSettings: Settings = {
   defaultCountryCode: '+1',
 };
 
-// Clear old corrupted storage
-const STORAGE_KEY = 'whatsapp-cms-v2';
-if (typeof window !== 'undefined') {
-  localStorage.removeItem('whatsapp-cms-storage');
-}
+const saveToStorage = (state: Partial<AppState>) => {
+  try {
+    const data = {
+      contacts: state.contacts,
+      templates: state.templates,
+      campaigns: state.campaigns,
+      logs: state.logs,
+      settings: state.settings,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('Failed to save to localStorage:', e);
+  }
+};
 
-export const useAppStore = create<AppState>()(
-  persist(
-    (set) => ({
-      contacts: [],
-      templates: defaultTemplates,
-      campaigns: [],
-      logs: [],
-      settings: defaultSettings,
-      
-      addContact: (contact) => set((state) => ({
+const loadFromStorageData = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load from localStorage:', e);
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  return null;
+};
+
+export const useAppStore = create<AppState>((set, get) => ({
+  contacts: [],
+  templates: defaultTemplates,
+  campaigns: [],
+  logs: [],
+  settings: defaultSettings,
+  
+  loadFromStorage: () => {
+    const data = loadFromStorageData();
+    if (data) {
+      set({
+        contacts: data.contacts || [],
+        templates: data.templates?.length > 0 ? data.templates : defaultTemplates,
+        campaigns: data.campaigns || [],
+        logs: data.logs || [],
+        settings: data.settings || defaultSettings,
+      });
+    }
+  },
+  
+  addContact: (contact) => {
+    set((state) => {
+      const newState = {
         contacts: [...state.contacts, {
           ...contact,
           id: generateId(),
           createdAt: new Date().toISOString(),
         }],
-      })),
-      
-      removeContact: (id) => set((state) => ({
-        contacts: state.contacts.filter((c) => c.id !== id),
-      })),
-      
-      updateContact: (id, contact) => set((state) => ({
-        contacts: state.contacts.map((c) => 
-          c.id === id ? { ...c, ...contact } : c
-        ),
-      })),
-      
-      importContacts: (contacts) => set((state) => ({
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  removeContact: (id) => {
+    set((state) => {
+      const newState = { contacts: state.contacts.filter((c) => c.id !== id) };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  updateContact: (id, contact) => {
+    set((state) => {
+      const newState = {
+        contacts: state.contacts.map((c) => c.id === id ? { ...c, ...contact } : c),
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  importContacts: (contacts) => {
+    set((state) => {
+      const newState = {
         contacts: [
           ...state.contacts,
           ...contacts.map((c) => ({
@@ -97,53 +150,96 @@ export const useAppStore = create<AppState>()(
             createdAt: new Date().toISOString(),
           })),
         ],
-      })),
-      
-      addTemplate: (template) => set((state) => ({
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  addTemplate: (template) => {
+    set((state) => {
+      const newState = {
         templates: [...state.templates, {
           ...template,
           id: generateId(),
           createdAt: new Date().toISOString(),
         }],
-      })),
-      
-      removeTemplate: (id) => set((state) => ({
-        templates: state.templates.filter((t) => t.id !== id),
-      })),
-      
-      updateTemplate: (id, template) => set((state) => ({
-        templates: state.templates.map((t) => 
-          t.id === id ? { ...t, ...template } : t
-        ),
-      })),
-      
-      addCampaign: (campaign) => set((state) => ({
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  removeTemplate: (id) => {
+    set((state) => {
+      const newState = { templates: state.templates.filter((t) => t.id !== id) };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  updateTemplate: (id, template) => {
+    set((state) => {
+      const newState = {
+        templates: state.templates.map((t) => t.id === id ? { ...t, ...template } : t),
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  addCampaign: (campaign) => {
+    set((state) => {
+      const newState = {
         campaigns: [...state.campaigns, {
           ...campaign,
           id: generateId(),
           createdAt: new Date().toISOString(),
           sentCount: 0,
         }],
-      })),
-      
-      updateCampaign: (id, campaign) => set((state) => ({
-        campaigns: state.campaigns.map((c) => 
-          c.id === id ? { ...c, ...campaign } : c
-        ),
-      })),
-      
-      addLog: (log) => set((state) => ({
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  updateCampaign: (id, campaign) => {
+    set((state) => {
+      const newState = {
+        campaigns: state.campaigns.map((c) => c.id === id ? { ...c, ...campaign } : c),
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  addLog: (log) => {
+    set((state) => {
+      const newState = {
         logs: [{ ...log, id: generateId() }, ...state.logs].slice(0, 500),
-      })),
-      
-      updateSettings: (settings) => set((state) => ({
-        settings: { ...state.settings, ...settings },
-      })),
-    }),
-    {
-      name: STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
-      version: 2,
-    }
-  )
-);
+      };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+  
+  updateSettings: (settings) => {
+    set((state) => {
+      const newState = { settings: { ...state.settings, ...settings } };
+      saveToStorage({ ...state, ...newState });
+      return newState;
+    });
+  },
+}));
+
+// Load from storage on app start
+if (typeof window !== 'undefined') {
+  // Clean up old storage keys
+  localStorage.removeItem('whatsapp-cms-storage');
+  localStorage.removeItem('whatsapp-cms-v2');
+  
+  // Load data after a tick to avoid hydration issues
+  setTimeout(() => {
+    useAppStore.getState().loadFromStorage();
+  }, 0);
+}
