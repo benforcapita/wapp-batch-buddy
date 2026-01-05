@@ -141,23 +141,23 @@ export default function Campaigns() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between animate-fade-in">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{t('campaigns')}</h1>
-            <p className="mt-1 text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('campaigns')}</h1>
+            <p className="mt-1 text-sm sm:text-base text-muted-foreground">
               {t('createManage')}
             </p>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button variant="whatsapp">
+              <Button variant="whatsapp" size="sm" className="sm:size-default w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 {t('newCampaign')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{t('newCampaign')}</DialogTitle>
               </DialogHeader>
@@ -243,48 +243,48 @@ export default function Campaigns() {
         </div>
 
         {/* Campaigns List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {campaigns.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center animate-fade-in">
-              <Send className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-muted-foreground">{t('noCampaignsYet')}</p>
+            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 sm:p-12 text-center animate-fade-in">
+              <Send className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+              <p className="mt-4 text-sm sm:text-base text-muted-foreground">{t('noCampaignsYet')}</p>
             </div>
           ) : (
             campaigns.map((campaign) => (
               <div
                 key={campaign.id}
-                className="rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-md animate-slide-up"
+                className="rounded-xl border border-border bg-card p-4 sm:p-6 transition-all duration-300 hover:shadow-md animate-slide-up"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent">
-                      <MessageSquare className="h-6 w-6 text-accent-foreground" />
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-accent shrink-0">
+                      <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-accent-foreground" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-card-foreground">{campaign.name}</h3>
-                      <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-card-foreground text-sm sm:text-base truncate">{campaign.name}</h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
+                          <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                           {campaign.totalCount} {t('recipients')}
                         </span>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{campaign.sentCount}/{campaign.totalCount} {t('sent')}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("rounded-full px-3 py-1 text-xs font-medium", statusColors[campaign.status])}>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className={cn("rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-medium", statusColors[campaign.status])}>
                       {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
                     </span>
                     {campaign.status === 'draft' && (
                       <Button variant="whatsapp" size="sm" onClick={() => startCampaign(campaign.id)}>
-                        <Play className="h-4 w-4" />
-                        {t('start')}
+                        <Play className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">{t('start')}</span>
                       </Button>
                     )}
                   </div>
                 </div>
-                <p className="mt-4 text-sm text-muted-foreground line-clamp-2">
+                <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-muted-foreground line-clamp-2">
                   {campaign.message}
                 </p>
               </div>

@@ -34,22 +34,22 @@ export default function Settings() {
 
   return (
     <MainLayout>
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-2xl space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">{t('settings')}</h1>
-          <p className="mt-1 text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('settings')}</h1>
+          <p className="mt-1 text-sm sm:text-base text-muted-foreground">
             {t('configurePreferences')}
           </p>
         </div>
 
         {/* Info Card */}
-        <div className="rounded-xl border border-info/30 bg-info/10 p-4 animate-slide-up">
+        <div className="rounded-xl border border-info/30 bg-info/10 p-3 sm:p-4 animate-slide-up">
           <div className="flex gap-3">
-            <Info className="h-5 w-5 text-info shrink-0 mt-0.5" />
+            <Info className="h-4 w-4 sm:h-5 sm:w-5 text-info shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-card-foreground">{t('howItWorks')}</h4>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h4 className="text-sm sm:text-base font-medium text-card-foreground">{t('howItWorks')}</h4>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                 {t('howItWorksDescription')}
               </p>
             </div>
@@ -57,14 +57,14 @@ export default function Settings() {
         </div>
 
         {/* General Settings */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-6 animate-slide-up">
-          <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
-            <Globe className="h-5 w-5" />
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+          <h3 className="text-base sm:text-lg font-semibold text-card-foreground flex items-center gap-2">
+            <Globe className="h-4 w-4 sm:h-5 sm:w-5" />
             {t('generalSettings')}
           </h3>
           
           <div>
-            <Label htmlFor="businessName">{t('businessName')}</Label>
+            <Label htmlFor="businessName" className="text-sm">{t('businessName')}</Label>
             <Input
               id="businessName"
               value={settings.businessName}
@@ -78,7 +78,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <Label>{t('language')}</Label>
+            <Label className="text-sm">{t('language')}</Label>
             <Select value={language} onValueChange={handleLanguageChange}>
               <SelectTrigger className="mt-2">
                 <SelectValue />
@@ -95,19 +95,19 @@ export default function Settings() {
         </div>
 
         {/* WhatsApp Business API Settings */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-6 animate-slide-up">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
           <div>
-            <h3 className="text-lg font-semibold text-card-foreground">
+            <h3 className="text-base sm:text-lg font-semibold text-card-foreground">
               {t('whatsappBusinessSettings')}
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               {t('whatsappBusinessDescription')}
             </p>
           </div>
           
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div>
-              <Label htmlFor="phoneNumberId">{t('phoneNumberId')}</Label>
+              <Label htmlFor="phoneNumberId" className="text-sm">{t('phoneNumberId')}</Label>
               <Input
                 id="phoneNumberId"
                 value={settings.phoneNumberId}
@@ -121,7 +121,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <Label htmlFor="businessAccountId">{t('businessAccountId')}</Label>
+              <Label htmlFor="businessAccountId" className="text-sm">{t('businessAccountId')}</Label>
               <Input
                 id="businessAccountId"
                 value={settings.businessAccountId}
@@ -136,7 +136,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <Label htmlFor="accessToken">{t('accessToken')}</Label>
+            <Label htmlFor="accessToken" className="text-sm">{t('accessToken')}</Label>
             <Input
               id="accessToken"
               type="password"
@@ -150,9 +150,9 @@ export default function Settings() {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div>
-              <Label htmlFor="apiVersion">{t('apiVersion')}</Label>
+              <Label htmlFor="apiVersion" className="text-sm">{t('apiVersion')}</Label>
               <Input
                 id="apiVersion"
                 value={settings.apiVersion}
@@ -166,7 +166,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <Label htmlFor="webhookUrl">{t('webhookUrl')}</Label>
+              <Label htmlFor="webhookUrl" className="text-sm">{t('webhookUrl')}</Label>
               <Input
                 id="webhookUrl"
                 value={settings.webhookUrl}
@@ -181,7 +181,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <Label htmlFor="webhookVerifyToken">{t('webhookVerifyToken')}</Label>
+            <Label htmlFor="webhookVerifyToken" className="text-sm">{t('webhookVerifyToken')}</Label>
             <Input
               id="webhookVerifyToken"
               value={settings.webhookVerifyToken}
@@ -196,13 +196,13 @@ export default function Settings() {
         </div>
 
         {/* Messaging Settings */}
-        <div className="rounded-xl border border-border bg-card p-6 space-y-6 animate-slide-up">
-          <h3 className="text-lg font-semibold text-card-foreground">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+          <h3 className="text-base sm:text-lg font-semibold text-card-foreground">
             {t('messagingSettings')}
           </h3>
           
           <div>
-            <Label htmlFor="countryCode">{t('defaultCountryCode')}</Label>
+            <Label htmlFor="countryCode" className="text-sm">{t('defaultCountryCode')}</Label>
             <Input
               id="countryCode"
               value={settings.defaultCountryCode}
@@ -216,7 +216,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <Label htmlFor="delay">{t('delayBetweenMessages')}</Label>
+            <Label htmlFor="delay" className="text-sm">{t('delayBetweenMessages')}</Label>
             <Input
               id="delay"
               type="number"
@@ -232,7 +232,7 @@ export default function Settings() {
           </div>
 
           <div>
-            <Label htmlFor="maxMessages">{t('maxMessagesPerDay')}</Label>
+            <Label htmlFor="maxMessages" className="text-sm">{t('maxMessagesPerDay')}</Label>
             <Input
               id="maxMessages"
               type="number"
@@ -249,12 +249,12 @@ export default function Settings() {
         </div>
 
         {/* Warning */}
-        <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 animate-slide-up">
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 sm:p-4 animate-slide-up">
           <div className="flex gap-3">
-            <AlertCircle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-warning shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-card-foreground">{t('importantNotice')}</h4>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h4 className="text-sm sm:text-base font-medium text-card-foreground">{t('importantNotice')}</h4>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                 {t('warningText')}
               </p>
             </div>

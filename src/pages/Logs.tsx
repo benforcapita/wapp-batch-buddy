@@ -40,11 +40,11 @@ export default function Logs() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">{t('messageLogs')}</h1>
-          <p className="mt-1 text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('messageLogs')}</h1>
+          <p className="mt-1 text-sm sm:text-base text-muted-foreground">
             {t('trackMessages')}
           </p>
         </div>
@@ -75,8 +75,41 @@ export default function Logs() {
           </Select>
         </div>
 
-        {/* Logs Table */}
-        <div className="rounded-xl border border-border bg-card animate-slide-up">
+        {/* Logs - Mobile Cards / Desktop Table */}
+        <div className="block sm:hidden space-y-3">
+          {filteredLogs.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                {logs.length === 0 ? t('noMessagesYet') : t('noMessagesMatch')}
+              </p>
+            </div>
+          ) : (
+            filteredLogs.map((log) => {
+              const { icon: StatusIcon, color, bg } = statusConfig[log.status];
+              return (
+                <div key={log.id} className="rounded-xl border border-border bg-card p-4 animate-slide-up">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-card-foreground truncate">{log.contactName}</p>
+                      <p className="text-xs text-muted-foreground" dir="ltr">{log.contactPhone}</p>
+                    </div>
+                    <div className={cn("inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium shrink-0", bg, color)}>
+                      <StatusIcon className="h-3 w-3" />
+                      {log.status}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{log.message}</p>
+                  <p className="mt-2 text-[10px] text-muted-foreground">
+                    {format(new Date(log.sentAt), 'MMM dd, HH:mm')}
+                  </p>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden sm:block rounded-xl border border-border bg-card animate-slide-up">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
