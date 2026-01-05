@@ -6,7 +6,9 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { useAppStore } from '@/store/appStore';
 
 export default function Dashboard() {
-  const { contacts, campaigns, logs } = useAppStore();
+  const contacts = useAppStore((state) => state.contacts);
+  const campaigns = useAppStore((state) => state.campaigns);
+  const logs = useAppStore((state) => state.logs);
   
   const totalContacts = contacts.length;
   const totalCampaigns = campaigns.length;

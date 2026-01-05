@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { CheckCircle2, XCircle, Clock, Send } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import { cn } from '@/lib/utils';
@@ -18,7 +19,8 @@ const statusColors = {
 };
 
 export function RecentActivity() {
-  const logs = useAppStore((state) => state.logs.slice(0, 5));
+  const allLogs = useAppStore((state) => state.logs);
+  const logs = useMemo(() => allLogs.slice(0, 5), [allLogs]);
 
   return (
     <div className="rounded-xl border border-border bg-card p-6 animate-slide-up">
