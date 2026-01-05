@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Contact, MessageTemplate, Campaign, MessageLog, Settings } from '@/types';
 
 interface AppState {
@@ -8,6 +8,10 @@ interface AppState {
   campaigns: Campaign[];
   logs: MessageLog[];
   settings: Settings;
+  _hasHydrated: boolean;
+  
+  // Hydration
+  setHasHydrated: (state: boolean) => void;
   
   // Contact actions
   addContact: (contact: Omit<Contact, 'id' | 'createdAt'>) => void;
@@ -33,26 +37,26 @@ interface AppState {
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
-const getDefaultTemplates = (): MessageTemplate[] => [
+const defaultTemplates: MessageTemplate[] = [
   {
-    id: '1',
+    id: 'default-1',
     name: 'Welcome Message',
     content: 'Hello {{name}}! Welcome to our service. We\'re excited to have you!',
-    createdAt: new Date(),
+    createdAt: '2024-01-01T00:00:00.000Z',
   },
   {
-    id: '2',
+    id: 'default-2',
     name: 'Promotion',
     content: 'Hi {{name}}! 🎉 Don\'t miss our special offer this week. Use code SAVE20 for 20% off!',
-    createdAt: new Date(),
+    createdAt: '2024-01-01T00:00:00.000Z',
   },
 ];
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       contacts: [],
-      templates: [],
+      templates: defaultTemplates,
       campaigns: [],
       logs: [],
       settings: {
@@ -61,12 +65,15 @@ export const useAppStore = create<AppState>()(
         businessName: 'My Business',
         defaultCountryCode: '+1',
       },
+      _hasHydrated: false,
+      
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
       
       addContact: (contact) => set((state) => ({
         contacts: [...state.contacts, {
           ...contact,
           id: generateId(),
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         }],
       })),
       
@@ -86,7 +93,7 @@ export const useAppStore = create<AppState>()(
           ...contacts.map((c) => ({
             ...c,
             id: generateId(),
-            createdAt: new Date(),
+            createdAt: new Date().toISOString(),
           })),
         ],
       })),
@@ -95,7 +102,7 @@ export const useAppStore = create<AppState>()(
         templates: [...state.templates, {
           ...template,
           id: generateId(),
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
         }],
       })),
       
@@ -113,7 +120,7 @@ export const useAppStore = create<AppState>()(
         campaigns: [...state.campaigns, {
           ...campaign,
           id: generateId(),
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
           sentCount: 0,
         }],
       })),
@@ -134,12 +141,14 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'whatsapp-cms-storage',
-      onRehydrateStorage: () => (state) => {
-        // Add default templates if none exist after rehydration
-        if (state && state.templates.length === 0) {
-          state.templates = getDefaultTemplates();
-        }
-      },
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        contacts: state.contacts,
+        templates: state.templates,
+        campaigns: state.campaigns,
+        logs: state.logs,
+        settings: state.settings,
+      }),
     }
   )
 );
