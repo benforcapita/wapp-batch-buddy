@@ -8,10 +8,6 @@ interface AppState {
   campaigns: Campaign[];
   logs: MessageLog[];
   settings: Settings;
-  _hasHydrated: boolean;
-  
-  // Hydration
-  setHasHydrated: (state: boolean) => void;
   
   // Contact actions
   addContact: (contact: Omit<Contact, 'id' | 'createdAt'>) => void;
@@ -52,6 +48,19 @@ const defaultTemplates: MessageTemplate[] = [
   },
 ];
 
+const defaultSettings: Settings = {
+  delayBetweenMessages: 3,
+  maxMessagesPerDay: 100,
+  businessName: 'My Business',
+  defaultCountryCode: '+1',
+};
+
+// Clear old corrupted storage
+const STORAGE_KEY = 'whatsapp-cms-v2';
+if (typeof window !== 'undefined') {
+  localStorage.removeItem('whatsapp-cms-storage');
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -59,15 +68,7 @@ export const useAppStore = create<AppState>()(
       templates: defaultTemplates,
       campaigns: [],
       logs: [],
-      settings: {
-        delayBetweenMessages: 3,
-        maxMessagesPerDay: 100,
-        businessName: 'My Business',
-        defaultCountryCode: '+1',
-      },
-      _hasHydrated: false,
-      
-      setHasHydrated: (state) => set({ _hasHydrated: state }),
+      settings: defaultSettings,
       
       addContact: (contact) => set((state) => ({
         contacts: [...state.contacts, {
@@ -140,15 +141,9 @@ export const useAppStore = create<AppState>()(
       })),
     }),
     {
-      name: 'whatsapp-cms-storage',
+      name: STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        contacts: state.contacts,
-        templates: state.templates,
-        campaigns: state.campaigns,
-        logs: state.logs,
-        settings: state.settings,
-      }),
+      version: 2,
     }
   )
 );
