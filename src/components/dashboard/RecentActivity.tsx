@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { CheckCircle2, XCircle, Clock, Send } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -21,12 +22,13 @@ const statusColors = {
 export function RecentActivity() {
   const allLogs = useAppStore((state) => state.logs);
   const logs = useMemo(() => allLogs.slice(0, 5), [allLogs]);
+  const { t } = useLanguage();
 
   return (
     <div className="rounded-xl border border-border bg-card p-6 animate-slide-up">
-      <h3 className="mb-4 text-lg font-semibold text-card-foreground">Recent Activity</h3>
+      <h3 className="mb-4 text-lg font-semibold text-card-foreground">{t('recentActivity')}</h3>
       {logs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No recent messages</p>
+        <p className="text-sm text-muted-foreground">{t('noRecentMessages')}</p>
       ) : (
         <div className="space-y-3">
           {logs.map((log) => {

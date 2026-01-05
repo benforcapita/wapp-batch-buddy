@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Plus, Send, Play, Pause, Users, MessageSquare } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Send, Play, Users, MessageSquare } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/store/appStore';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
   DialogContent,
@@ -32,8 +33,15 @@ const statusColors = {
 };
 
 export default function Campaigns() {
-  const { campaigns, contacts, templates, addCampaign, updateCampaign, addLog, settings } = useAppStore();
+  const campaigns = useAppStore((state) => state.campaigns);
+  const contacts = useAppStore((state) => state.contacts);
+  const templates = useAppStore((state) => state.templates);
+  const settings = useAppStore((state) => state.settings);
+  const addCampaign = useAppStore((state) => state.addCampaign);
+  const updateCampaign = useAppStore((state) => state.updateCampaign);
+  const addLog = useAppStore((state) => state.addLog);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [formData, setFormData] = useState({
@@ -86,7 +94,7 @@ export default function Campaigns() {
     setFormData({ name: '', message: '', templateId: '' });
     setSelectedContacts([]);
     setIsOpen(false);
-    toast({ title: "Campaign Created" });
+    toast({ title: t('createCampaign') });
   };
 
   const startCampaign = async (campaignId: string) => {
@@ -116,7 +124,7 @@ export default function Campaigns() {
         contactPhone: contact.phone,
         message: personalizedMessage,
         status: 'sent',
-        sentAt: new Date(),
+        sentAt: new Date().toISOString(),
       });
 
       updateCampaign(campaignId, { sentCount: i + 1 });
@@ -137,25 +145,25 @@ export default function Campaigns() {
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Campaigns</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('campaigns')}</h1>
             <p className="mt-1 text-muted-foreground">
-              Create and manage your bulk messaging campaigns
+              {t('createManage')}
             </p>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button variant="whatsapp">
-                <Plus className="mr-2 h-4 w-4" />
-                New Campaign
+                <Plus className="h-4 w-4" />
+                {t('newCampaign')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Campaign</DialogTitle>
+                <DialogTitle>{t('newCampaign')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="campaignName">Campaign Name</Label>
+                  <Label htmlFor="campaignName">{t('campaignName')}</Label>
                   <Input
                     id="campaignName"
                     value={formData.name}
@@ -165,10 +173,10 @@ export default function Campaigns() {
                 </div>
 
                 <div>
-                  <Label>Use Template (optional)</Label>
+                  <Label>{t('useTemplate')}</Label>
                   <Select value={formData.templateId} onValueChange={handleTemplateSelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a template" />
+                      <SelectValue placeholder={t('selectTemplate')} />
                     </SelectTrigger>
                     <SelectContent>
                       {templates.map((template) => (
@@ -181,7 +189,7 @@ export default function Campaigns() {
                 </div>
 
                 <div>
-                  <Label htmlFor="message">Message</Label>
+                  <Label htmlFor="message">{t('message')}</Label>
                   <textarea
                     id="message"
                     className="min-h-[120px] w-full rounded-lg border border-input bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -190,20 +198,20 @@ export default function Campaigns() {
                     placeholder="Hello {{name}}! ..."
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Use {"{{name}}"} as placeholder for contact name
+                    {t('placeholderHint')}
                   </p>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <Label>Select Recipients ({selectedContacts.length} selected)</Label>
+                    <Label>{t('selectRecipients')} ({selectedContacts.length} {t('selected')})</Label>
                     <Button variant="ghost" size="sm" onClick={selectAllContacts}>
-                      {selectedContacts.length === contacts.length ? 'Deselect All' : 'Select All'}
+                      {selectedContacts.length === contacts.length ? t('deselectAll') : t('selectAll')}
                     </Button>
                   </div>
                   <div className="max-h-[200px] overflow-y-auto rounded-lg border border-input bg-muted/30 p-3">
                     {contacts.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No contacts available. Add contacts first.</p>
+                      <p className="text-sm text-muted-foreground">{t('noContactsAvailable')}</p>
                     ) : (
                       <div className="space-y-2">
                         {contacts.map((contact) => (
@@ -217,7 +225,7 @@ export default function Campaigns() {
                             />
                             <div>
                               <p className="text-sm font-medium text-card-foreground">{contact.name}</p>
-                              <p className="text-xs text-muted-foreground">{contact.phone}</p>
+                              <p className="text-xs text-muted-foreground" dir="ltr">{contact.phone}</p>
                             </div>
                           </label>
                         ))}
@@ -227,7 +235,7 @@ export default function Campaigns() {
                 </div>
 
                 <Button onClick={handleCreate} className="w-full" variant="whatsapp">
-                  Create Campaign
+                  {t('createCampaign')}
                 </Button>
               </div>
             </DialogContent>
@@ -239,7 +247,7 @@ export default function Campaigns() {
           {campaigns.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center animate-fade-in">
               <Send className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-muted-foreground">No campaigns yet. Create your first campaign to start messaging.</p>
+              <p className="mt-4 text-muted-foreground">{t('noCampaignsYet')}</p>
             </div>
           ) : (
             campaigns.map((campaign) => (
@@ -257,10 +265,10 @@ export default function Campaigns() {
                       <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
-                          {campaign.totalCount} recipients
+                          {campaign.totalCount} {t('recipients')}
                         </span>
                         <span>•</span>
-                        <span>{campaign.sentCount}/{campaign.totalCount} sent</span>
+                        <span>{campaign.sentCount}/{campaign.totalCount} {t('sent')}</span>
                       </div>
                     </div>
                   </div>
@@ -270,8 +278,8 @@ export default function Campaigns() {
                     </span>
                     {campaign.status === 'draft' && (
                       <Button variant="whatsapp" size="sm" onClick={() => startCampaign(campaign.id)}>
-                        <Play className="mr-1 h-4 w-4" />
-                        Start
+                        <Play className="h-4 w-4" />
+                        {t('start')}
                       </Button>
                     )}
                   </div>

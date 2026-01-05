@@ -4,17 +4,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/store/appStore';
 import { useToast } from '@/hooks/use-toast';
-import { Save, AlertCircle, Info } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Save, AlertCircle, Info, Globe } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function Settings() {
-  const { settings, updateSettings } = useAppStore();
+  const settings = useAppStore((state) => state.settings);
+  const updateSettings = useAppStore((state) => state.updateSettings);
   const { toast } = useToast();
+  const { t, setLanguage, language } = useLanguage();
 
   const handleSave = () => {
     toast({
-      title: "Settings Saved",
-      description: "Your settings have been saved successfully.",
+      title: t('settingsSaved'),
+      description: t('settingsSavedDescription'),
     });
+  };
+
+  const handleLanguageChange = (value: 'en' | 'he') => {
+    setLanguage(value);
+    updateSettings({ language: value });
   };
 
   return (
@@ -22,9 +37,9 @@ export default function Settings() {
       <div className="max-w-2xl space-y-6">
         {/* Header */}
         <div className="animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('settings')}</h1>
           <p className="mt-1 text-muted-foreground">
-            Configure your WhatsApp messaging preferences
+            {t('configurePreferences')}
           </p>
         </div>
 
@@ -33,20 +48,23 @@ export default function Settings() {
           <div className="flex gap-3">
             <Info className="h-5 w-5 text-info shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-card-foreground">How it works</h4>
+              <h4 className="font-medium text-card-foreground">{t('howItWorks')}</h4>
               <p className="mt-1 text-sm text-muted-foreground">
-                This tool opens WhatsApp Web links for each contact with your pre-filled message. 
-                Make sure you're logged into WhatsApp Web in your browser. Each message opens in a new tab 
-                where you just need to click Send.
+                {t('howItWorksDescription')}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Settings Form */}
+        {/* General Settings */}
         <div className="rounded-xl border border-border bg-card p-6 space-y-6 animate-slide-up">
+          <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            {t('generalSettings')}
+          </h3>
+          
           <div>
-            <Label htmlFor="businessName">Business Name</Label>
+            <Label htmlFor="businessName">{t('businessName')}</Label>
             <Input
               id="businessName"
               value={settings.businessName}
@@ -55,12 +73,136 @@ export default function Settings() {
               className="mt-2"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Used for reference in your campaigns
+              {t('businessNameHint')}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="countryCode">Default Country Code</Label>
+            <Label>{t('language')}</Label>
+            <Select value={language} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="mt-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="he">עברית</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('languageHint')}
+            </p>
+          </div>
+        </div>
+
+        {/* WhatsApp Business API Settings */}
+        <div className="rounded-xl border border-border bg-card p-6 space-y-6 animate-slide-up">
+          <div>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              {t('whatsappBusinessSettings')}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('whatsappBusinessDescription')}
+            </p>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="phoneNumberId">{t('phoneNumberId')}</Label>
+              <Input
+                id="phoneNumberId"
+                value={settings.phoneNumberId}
+                onChange={(e) => updateSettings({ phoneNumberId: e.target.value })}
+                placeholder="123456789012345"
+                className="mt-2"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('phoneNumberIdHint')}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="businessAccountId">{t('businessAccountId')}</Label>
+              <Input
+                id="businessAccountId"
+                value={settings.businessAccountId}
+                onChange={(e) => updateSettings({ businessAccountId: e.target.value })}
+                placeholder="123456789012345"
+                className="mt-2"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('businessAccountIdHint')}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="accessToken">{t('accessToken')}</Label>
+            <Input
+              id="accessToken"
+              type="password"
+              value={settings.accessToken}
+              onChange={(e) => updateSettings({ accessToken: e.target.value })}
+              placeholder="EAAxxxxxxxxxxxxxxxx"
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('accessTokenHint')}
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label htmlFor="apiVersion">{t('apiVersion')}</Label>
+              <Input
+                id="apiVersion"
+                value={settings.apiVersion}
+                onChange={(e) => updateSettings({ apiVersion: e.target.value })}
+                placeholder="v18.0"
+                className="mt-2"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('apiVersionHint')}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="webhookUrl">{t('webhookUrl')}</Label>
+              <Input
+                id="webhookUrl"
+                value={settings.webhookUrl}
+                onChange={(e) => updateSettings({ webhookUrl: e.target.value })}
+                placeholder="https://your-domain.com/webhook"
+                className="mt-2"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('webhookUrlHint')}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="webhookVerifyToken">{t('webhookVerifyToken')}</Label>
+            <Input
+              id="webhookVerifyToken"
+              value={settings.webhookVerifyToken}
+              onChange={(e) => updateSettings({ webhookVerifyToken: e.target.value })}
+              placeholder="your-verify-token"
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('webhookVerifyTokenHint')}
+            </p>
+          </div>
+        </div>
+
+        {/* Messaging Settings */}
+        <div className="rounded-xl border border-border bg-card p-6 space-y-6 animate-slide-up">
+          <h3 className="text-lg font-semibold text-card-foreground">
+            {t('messagingSettings')}
+          </h3>
+          
+          <div>
+            <Label htmlFor="countryCode">{t('defaultCountryCode')}</Label>
             <Input
               id="countryCode"
               value={settings.defaultCountryCode}
@@ -69,12 +211,12 @@ export default function Settings() {
               className="mt-2"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Applied to phone numbers without a country code
+              {t('defaultCountryCodeHint')}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="delay">Delay Between Messages (seconds)</Label>
+            <Label htmlFor="delay">{t('delayBetweenMessages')}</Label>
             <Input
               id="delay"
               type="number"
@@ -85,12 +227,12 @@ export default function Settings() {
               className="mt-2"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Time to wait between opening each WhatsApp message (1-60 seconds)
+              {t('delayHint')}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="maxMessages">Max Messages Per Day</Label>
+            <Label htmlFor="maxMessages">{t('maxMessagesPerDay')}</Label>
             <Input
               id="maxMessages"
               type="number"
@@ -101,7 +243,7 @@ export default function Settings() {
               className="mt-2"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Recommended limit to avoid WhatsApp restrictions
+              {t('maxMessagesHint')}
             </p>
           </div>
         </div>
@@ -111,19 +253,17 @@ export default function Settings() {
           <div className="flex gap-3">
             <AlertCircle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-card-foreground">Important Notice</h4>
+              <h4 className="font-medium text-card-foreground">{t('importantNotice')}</h4>
               <p className="mt-1 text-sm text-muted-foreground">
-                This tool is for legitimate business communication only. Sending spam or unsolicited 
-                messages may result in your WhatsApp account being banned. Always ensure you have 
-                consent from recipients before messaging them.
+                {t('warningText')}
               </p>
             </div>
           </div>
         </div>
 
         <Button onClick={handleSave} variant="whatsapp" className="w-full">
-          <Save className="mr-2 h-4 w-4" />
-          Save Settings
+          <Save className="h-4 w-4" />
+          {t('saveSettings')}
         </Button>
       </div>
     </MainLayout>

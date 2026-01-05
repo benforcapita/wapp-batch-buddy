@@ -53,10 +53,22 @@ const defaultTemplates: MessageTemplate[] = [
 ];
 
 const defaultSettings: Settings = {
+  // General
+  businessName: 'My Business',
+  language: 'en',
+  
+  // WhatsApp Business API
+  phoneNumberId: '',
+  businessAccountId: '',
+  accessToken: '',
+  apiVersion: 'v18.0',
+  webhookUrl: '',
+  webhookVerifyToken: '',
+  
+  // Messaging
+  defaultCountryCode: '+1',
   delayBetweenMessages: 3,
   maxMessagesPerDay: 100,
-  businessName: 'My Business',
-  defaultCountryCode: '+1',
 };
 
 const saveToStorage = (state: Partial<AppState>) => {

@@ -1,34 +1,37 @@
 import { Link } from 'react-router-dom';
 import { Plus, Upload, Send, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function QuickActions() {
+  const { t } = useLanguage();
+
   return (
     <div className="rounded-xl border border-border bg-card p-6 animate-slide-up">
-      <h3 className="mb-4 text-lg font-semibold text-card-foreground">Quick Actions</h3>
+      <h3 className="mb-4 text-lg font-semibold text-card-foreground">{t('quickActions')}</h3>
       <div className="grid grid-cols-2 gap-3">
         <Link to="/contacts">
           <Button variant="outline" className="w-full justify-start gap-2">
             <Plus className="h-4 w-4" />
-            Add Contact
+            {t('addContact')}
           </Button>
         </Link>
         <Link to="/contacts">
           <Button variant="outline" className="w-full justify-start gap-2">
             <Upload className="h-4 w-4" />
-            Import Contacts
+            {t('importContacts')}
           </Button>
         </Link>
         <Link to="/campaigns">
           <Button variant="whatsapp" className="w-full justify-start gap-2">
             <Send className="h-4 w-4" />
-            New Campaign
+            {t('newCampaign')}
           </Button>
         </Link>
         <Link to="/templates">
           <Button variant="outline" className="w-full justify-start gap-2">
             <FileText className="h-4 w-4" />
-            Create Template
+            {t('createTemplate')}
           </Button>
         </Link>
       </div>

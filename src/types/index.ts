@@ -39,8 +39,20 @@ export interface MessageLog {
 }
 
 export interface Settings {
+  // General
+  businessName: string;
+  language: 'en' | 'he';
+  
+  // WhatsApp Business API
+  phoneNumberId: string;
+  businessAccountId: string;
+  accessToken: string;
+  apiVersion: string;
+  webhookUrl: string;
+  webhookVerifyToken: string;
+  
+  // Messaging
+  defaultCountryCode: string;
   delayBetweenMessages: number;
   maxMessagesPerDay: number;
-  businessName: string;
-  defaultCountryCode: string;
 }
