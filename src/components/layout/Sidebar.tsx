@@ -13,24 +13,31 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-
-const navItems = [
-  { path: '/', icon: MessageSquare, label: 'Dashboard' },
-  { path: '/contacts', icon: Users, label: 'Contacts' },
-  { path: '/templates', icon: FileText, label: 'Templates' },
-  { path: '/campaigns', icon: Send, label: 'Campaigns' },
-  { path: '/logs', icon: History, label: 'Message Logs' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { t, dir } = useLanguage();
+
+  const navItems = [
+    { path: '/', icon: MessageSquare, labelKey: 'dashboard' as const },
+    { path: '/contacts', icon: Users, labelKey: 'contacts' as const },
+    { path: '/templates', icon: FileText, labelKey: 'templates' as const },
+    { path: '/campaigns', icon: Send, labelKey: 'campaigns' as const },
+    { path: '/logs', icon: History, labelKey: 'messageLogs' as const },
+    { path: '/settings', icon: Settings, labelKey: 'settings' as const },
+  ];
+
+  const CollapseIcon = dir === 'rtl' 
+    ? (collapsed ? ChevronLeft : ChevronRight)
+    : (collapsed ? ChevronRight : ChevronLeft);
 
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300",
+        "fixed top-0 z-40 h-screen bg-sidebar transition-all duration-300",
+        dir === 'rtl' ? 'right-0' : 'left-0',
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -53,7 +60,7 @@ export function Sidebar() {
             onClick={() => setCollapsed(!collapsed)}
             className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <CollapseIcon className="h-4 w-4" />
           </Button>
         </div>
 
@@ -74,7 +81,7 @@ export function Sidebar() {
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 {!collapsed && (
-                  <span className="animate-fade-in">{item.label}</span>
+                  <span className="animate-fade-in">{t(item.labelKey)}</span>
                 )}
               </NavLink>
             );
@@ -93,7 +100,7 @@ export function Sidebar() {
             </div>
             {!collapsed && (
               <span className="text-xs text-sidebar-foreground animate-fade-in">
-                Ready to send
+                {t('readyToSend')}
               </span>
             )}
           </div>

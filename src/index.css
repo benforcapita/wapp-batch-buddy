@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Heebo:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -105,7 +105,50 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Heebo', system-ui, sans-serif;
+  }
+  
+  /* RTL Support */
+  [dir="rtl"] {
+    font-family: 'Heebo', 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  
+  [dir="rtl"] .ml-64 {
+    margin-left: 0;
+    margin-right: 16rem;
+  }
+  
+  [dir="rtl"] .left-0 {
+    left: auto;
+    right: 0;
+  }
+  
+  [dir="rtl"] .pl-10 {
+    padding-left: 0;
+    padding-right: 2.5rem;
+  }
+  
+  [dir="rtl"] .left-3 {
+    left: auto;
+    right: 0.75rem;
+  }
+  
+  [dir="rtl"] .mr-2 {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+  
+  [dir="rtl"] .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  
+  [dir="rtl"] .text-left {
+    text-align: right;
+  }
+  
+  [dir="rtl"] .text-right {
+    text-align: left;
   }
 }
 

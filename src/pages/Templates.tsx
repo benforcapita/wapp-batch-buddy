@@ -4,6 +4,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/store/appStore';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +16,12 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Templates() {
-  const { templates, addTemplate, removeTemplate, updateTemplate } = useAppStore();
+  const templates = useAppStore((state) => state.templates);
+  const addTemplate = useAppStore((state) => state.addTemplate);
+  const removeTemplate = useAppStore((state) => state.removeTemplate);
+  const updateTemplate = useAppStore((state) => state.updateTemplate);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', content: '' });
@@ -33,10 +38,10 @@ export default function Templates() {
 
     if (editingId) {
       updateTemplate(editingId, formData);
-      toast({ title: "Template Updated" });
+      toast({ title: t('updateTemplate') });
     } else {
       addTemplate(formData);
-      toast({ title: "Template Created" });
+      toast({ title: t('createTemplate') });
     }
 
     setFormData({ name: '', content: '' });
@@ -61,9 +66,9 @@ export default function Templates() {
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Message Templates</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('messageTemplates')}</h1>
             <p className="mt-1 text-muted-foreground">
-              Create reusable message templates with placeholders
+              {t('createReusable')}
             </p>
           </div>
           <Dialog open={isOpen} onOpenChange={(open) => {
@@ -75,17 +80,17 @@ export default function Templates() {
           }}>
             <DialogTrigger asChild>
               <Button variant="whatsapp">
-                <Plus className="mr-2 h-4 w-4" />
-                New Template
+                <Plus className="h-4 w-4" />
+                {t('newTemplate')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editingId ? 'Edit Template' : 'Create Template'}</DialogTitle>
+                <DialogTitle>{editingId ? t('editTemplate') : t('newTemplate')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="templateName">Template Name</Label>
+                  <Label htmlFor="templateName">{t('templateName')}</Label>
                   <Input
                     id="templateName"
                     value={formData.name}
@@ -94,7 +99,7 @@ export default function Templates() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="templateContent">Message Content</Label>
+                  <Label htmlFor="templateContent">{t('messageContent')}</Label>
                   <textarea
                     id="templateContent"
                     className="min-h-[150px] w-full rounded-lg border border-input bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -103,11 +108,11 @@ export default function Templates() {
                     placeholder="Hello {{name}}! Welcome to our service..."
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Use {"{{name}}"} as placeholder for contact name
+                    {t('placeholderHint')}
                   </p>
                 </div>
                 <Button onClick={handleSave} className="w-full" variant="whatsapp">
-                  {editingId ? 'Update Template' : 'Create Template'}
+                  {editingId ? t('updateTemplate') : t('createTemplate')}
                 </Button>
               </div>
             </DialogContent>
@@ -159,7 +164,7 @@ export default function Templates() {
 
         {templates.length === 0 && (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 p-12 text-center animate-fade-in">
-            <p className="text-muted-foreground">No templates yet. Create your first template to get started.</p>
+            <p className="text-muted-foreground">{t('noTemplatesYet')}</p>
           </div>
         )}
       </div>
