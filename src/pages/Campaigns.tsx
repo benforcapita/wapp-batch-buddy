@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Send, Play, Users, MessageSquare } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Send, Play, Users, MessageSquare, RefreshCw } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { fetchWhatsAppTemplates, sendWhatsAppTemplateMessage, WhatsAppTemplate } from '@/lib/whatsapp-api';
 
 const statusColors = {
   draft: 'bg-muted text-muted-foreground',
@@ -35,7 +36,6 @@ const statusColors = {
 export default function Campaigns() {
   const campaigns = useAppStore((state) => state.campaigns);
   const contacts = useAppStore((state) => state.contacts);
-  const templates = useAppStore((state) => state.templates);
   const settings = useAppStore((state) => state.settings);
   const addCampaign = useAppStore((state) => state.addCampaign);
   const updateCampaign = useAppStore((state) => state.updateCampaign);
@@ -44,16 +44,53 @@ export default function Campaigns() {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [apiTemplates, setApiTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    message: '',
     templateId: '',
+    templateName: '',
+    templateLanguage: '',
+    templateBody: '',
   });
 
+  // Load templates from API
+  const loadTemplates = async () => {
+    if (!settings.businessAccountId || !settings.accessToken) return;
+    
+    setIsLoadingTemplates(true);
+    try {
+      const templates = await fetchWhatsAppTemplates();
+      // Only show approved templates
+      setApiTemplates(templates.filter(t => t.status === 'APPROVED'));
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  useEffect(() => {
+    if (settings.businessAccountId && settings.accessToken) {
+      loadTemplates();
+    }
+  }, [settings.businessAccountId, settings.accessToken]);
+
+  const getTemplateBody = (template: WhatsAppTemplate): string => {
+    const bodyComponent = template.components.find(c => c.type === 'BODY');
+    return bodyComponent?.text || '';
+  };
+
   const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    const template = apiTemplates.find(t => t.id === templateId);
     if (template) {
-      setFormData({ ...formData, templateId, message: template.content });
+      setFormData({ 
+        ...formData, 
+        templateId,
+        templateName: template.name,
+        templateLanguage: template.language,
+        templateBody: getTemplateBody(template),
+      });
     }
   };
 
@@ -74,7 +111,7 @@ export default function Campaigns() {
   };
 
   const handleCreate = () => {
-    if (!formData.name.trim() || !formData.message.trim() || selectedContacts.length === 0) {
+    if (!formData.name.trim() || !formData.templateId || selectedContacts.length === 0) {
       toast({
         title: "Validation Error",
         description: "Please fill all fields and select at least one contact.",
@@ -85,13 +122,14 @@ export default function Campaigns() {
 
     addCampaign({
       name: formData.name,
-      message: formData.message,
+      message: formData.templateBody,
+      template: formData.templateId,
       contacts: selectedContacts,
       status: 'draft',
       totalCount: selectedContacts.length,
     });
 
-    setFormData({ name: '', message: '', templateId: '' });
+    setFormData({ name: '', templateId: '', templateName: '', templateLanguage: '', templateBody: '' });
     setSelectedContacts([]);
     setIsOpen(false);
     toast({ title: t('createCampaign') });
@@ -101,31 +139,71 @@ export default function Campaigns() {
     const campaign = campaigns.find(c => c.id === campaignId);
     if (!campaign) return;
 
+    // Check if API credentials are configured
+    if (!settings.phoneNumberId || !settings.accessToken) {
+      toast({
+        title: "API Not Configured",
+        description: "Please configure your WhatsApp Business API credentials in Settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Find the template for this campaign
+    const template = apiTemplates.find(t => t.id === campaign.template);
+    if (!template) {
+      toast({
+        title: "Template Not Found",
+        description: "The template for this campaign is no longer available. Please refresh templates.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateCampaign(campaignId, { status: 'sending' });
+    let successCount = 0;
+    let failCount = 0;
 
     for (let i = 0; i < campaign.contacts.length; i++) {
       const contactId = campaign.contacts[i];
       const contact = contacts.find(c => c.id === contactId);
       if (!contact) continue;
 
-      const personalizedMessage = campaign.message.replace(/\{\{name\}\}/g, contact.name);
+      // Build variables array - {{1}} = name by default
+      const variables = [contact.name];
       
-      // Open WhatsApp Web with the message
-      const encodedMessage = encodeURIComponent(personalizedMessage);
-      const phoneNumber = contact.phone.replace(/[^0-9]/g, '');
-      const whatsappUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-      
-      window.open(whatsappUrl, '_blank');
+      try {
+        // Send via WhatsApp Business API using template
+        await sendWhatsAppTemplateMessage(
+          contact.phone,
+          template.name,
+          template.language,
+          variables
+        );
 
-      addLog({
-        campaignId,
-        contactId: contact.id,
-        contactName: contact.name,
-        contactPhone: contact.phone,
-        message: personalizedMessage,
-        status: 'sent',
-        sentAt: new Date().toISOString(),
-      });
+        addLog({
+          campaignId,
+          contactId: contact.id,
+          contactName: contact.name,
+          contactPhone: contact.phone,
+          message: `[Template: ${template.name}] ${campaign.message}`.replace(/\{\{1\}\}/g, contact.name),
+          status: 'sent',
+          sentAt: new Date().toISOString(),
+        });
+        successCount++;
+      } catch (error) {
+        addLog({
+          campaignId,
+          contactId: contact.id,
+          contactName: contact.name,
+          contactPhone: contact.phone,
+          message: `[Template: ${template.name}] ${campaign.message}`,
+          status: 'failed',
+          sentAt: new Date().toISOString(),
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        failCount++;
+      }
 
       updateCampaign(campaignId, { sentCount: i + 1 });
 
@@ -135,8 +213,15 @@ export default function Campaigns() {
       }
     }
 
-    updateCampaign(campaignId, { status: 'completed' });
-    toast({ title: "Campaign Completed", description: `Sent ${campaign.contacts.length} messages.` });
+    updateCampaign(campaignId, { 
+      status: failCount === campaign.contacts.length ? 'failed' : 'completed' 
+    });
+    
+    toast({ 
+      title: "Campaign Completed", 
+      description: `Sent ${successCount} messages successfully${failCount > 0 ? `, ${failCount} failed` : ''}.`,
+      variant: failCount > 0 ? "destructive" : "default",
+    });
   };
 
   return (
@@ -173,34 +258,48 @@ export default function Campaigns() {
                 </div>
 
                 <div>
-                  <Label>{t('useTemplate')}</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label>WhatsApp Template</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={loadTemplates}
+                      disabled={isLoadingTemplates}
+                    >
+                      <RefreshCw className={cn("h-3 w-3 mr-1", isLoadingTemplates && "animate-spin")} />
+                      Refresh
+                    </Button>
+                  </div>
                   <Select value={formData.templateId} onValueChange={handleTemplateSelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('selectTemplate')} />
+                      <SelectValue placeholder={apiTemplates.length === 0 ? "No approved templates found" : "Select a template"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {templates.map((template) => (
+                      {apiTemplates.map((template) => (
                         <SelectItem key={template.id} value={template.id}>
-                          {template.name}
+                          {template.name} ({template.language})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {apiTemplates.length === 0 && !isLoadingTemplates && (
+                    <p className="mt-1 text-xs text-warning">
+                      No approved templates found. Create templates in Meta Business Manager.
+                    </p>
+                  )}
                 </div>
 
-                <div>
-                  <Label htmlFor="message">{t('message')}</Label>
-                  <textarea
-                    id="message"
-                    className="min-h-[120px] w-full rounded-lg border border-input bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Hello {{name}}! ..."
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('placeholderHint')}
-                  </p>
-                </div>
+                {formData.templateBody && (
+                  <div>
+                    <Label>Template Preview</Label>
+                    <div className="mt-2 p-3 rounded-lg border border-border bg-muted/30 text-sm whitespace-pre-wrap">
+                      {formData.templateBody}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {"{{1}}"} will be replaced with the contact's name
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -234,7 +333,12 @@ export default function Campaigns() {
                   </div>
                 </div>
 
-                <Button onClick={handleCreate} className="w-full" variant="whatsapp">
+                <Button 
+                  onClick={handleCreate} 
+                  className="w-full" 
+                  variant="whatsapp"
+                  disabled={!formData.templateId}
+                >
                   {t('createCampaign')}
                 </Button>
               </div>

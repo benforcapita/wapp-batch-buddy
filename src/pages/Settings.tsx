@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/store/appStore';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Save, AlertCircle, Info, Globe } from 'lucide-react';
+import { Save, AlertCircle, Info, Globe, Download, Upload, RefreshCw, FileJson } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -17,8 +18,10 @@ import {
 export default function Settings() {
   const settings = useAppStore((state) => state.settings);
   const updateSettings = useAppStore((state) => state.updateSettings);
+  const loadFromStorage = useAppStore((state) => state.loadFromStorage);
   const { toast } = useToast();
   const { t, setLanguage, language } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     toast({
@@ -32,6 +35,73 @@ export default function Settings() {
     updateSettings({ language: value });
   };
 
+  const handleExportConfig = () => {
+    const config = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      settings: settings,
+    };
+    
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `batch-buddy-config-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: 'Config Exported',
+      description: 'Settings exported to JSON file.',
+    });
+  };
+
+  const handleImportConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const config = JSON.parse(content);
+        
+        if (!config.settings) {
+          throw new Error('Invalid config file: missing settings');
+        }
+        
+        updateSettings(config.settings);
+        
+        toast({
+          title: 'Config Imported',
+          description: 'Settings loaded from config file.',
+        });
+      } catch (error) {
+        toast({
+          title: 'Import Failed',
+          description: error instanceof Error ? error.message : 'Failed to parse config file.',
+          variant: 'destructive',
+        });
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleReloadFromStorage = () => {
+    loadFromStorage();
+    toast({
+      title: 'Settings Reloaded',
+      description: 'Settings reloaded from local storage.',
+    });
+  };
+
   return (
     <MainLayout>
       <div className="max-w-2xl space-y-4 sm:space-y-6">
@@ -41,6 +111,43 @@ export default function Settings() {
           <p className="mt-1 text-sm sm:text-base text-muted-foreground">
             {t('configurePreferences')}
           </p>
+        </div>
+
+        {/* Config Management */}
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 space-y-4 animate-slide-up">
+          <div className="flex items-center gap-2">
+            <FileJson className="h-4 w-4 sm:h-5 sm:w-5" />
+            <h3 className="text-base sm:text-lg font-semibold text-card-foreground">
+              Configuration
+            </h3>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Export your settings to a JSON file or import from a saved config.
+          </p>
+          
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportConfig}>
+              <Download className="h-4 w-4" />
+              Export Config
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-4 w-4" />
+              Import Config
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImportConfig}
+              className="hidden"
+            />
+            
+            <Button variant="outline" size="sm" onClick={handleReloadFromStorage}>
+              <RefreshCw className="h-4 w-4" />
+              Reload
+            </Button>
+          </div>
         </div>
 
         {/* Info Card */}

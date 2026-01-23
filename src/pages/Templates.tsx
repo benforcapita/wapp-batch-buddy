@@ -1,64 +1,69 @@
-import { useState } from 'react';
-import { Plus, Trash2, Edit2, Copy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { RefreshCw, CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/store/appStore';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { fetchWhatsAppTemplates, WhatsAppTemplate } from '@/lib/whatsapp-api';
+import { cn } from '@/lib/utils';
+
+const statusConfig = {
+  APPROVED: { icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
+  PENDING: { icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
+  REJECTED: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
+};
 
 export default function Templates() {
-  const templates = useAppStore((state) => state.templates);
-  const addTemplate = useAppStore((state) => state.addTemplate);
-  const removeTemplate = useAppStore((state) => state.removeTemplate);
-  const updateTemplate = useAppStore((state) => state.updateTemplate);
+  const settings = useAppStore((state) => state.settings);
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', content: '' });
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    if (!formData.name.trim() || !formData.content.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Name and content are required.",
-        variant: "destructive",
-      });
+  const loadTemplates = async () => {
+    if (!settings.businessAccountId || !settings.accessToken) {
+      setError('Please configure your WhatsApp Business API credentials in Settings.');
       return;
     }
 
-    if (editingId) {
-      updateTemplate(editingId, formData);
-      toast({ title: t('updateTemplate') });
-    } else {
-      addTemplate(formData);
-      toast({ title: t('createTemplate') });
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await fetchWhatsAppTemplates();
+      setTemplates(data);
+      toast({ title: 'Templates loaded', description: `Found ${data.length} templates.` });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load templates';
+      setError(message);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
     }
-
-    setFormData({ name: '', content: '' });
-    setEditingId(null);
-    setIsOpen(false);
   };
 
-  const handleEdit = (template: typeof templates[0]) => {
-    setFormData({ name: template.name, content: template.content });
-    setEditingId(template.id);
-    setIsOpen(true);
+  useEffect(() => {
+    if (settings.businessAccountId && settings.accessToken) {
+      loadTemplates();
+    }
+  }, [settings.businessAccountId, settings.accessToken]);
+
+  const getTemplateBody = (template: WhatsAppTemplate): string => {
+    const bodyComponent = template.components.find(c => c.type === 'BODY');
+    return bodyComponent?.text || 'No body text';
   };
 
-  const handleCopy = (content: string) => {
-    navigator.clipboard.writeText(content);
-    toast({ title: "Copied to clipboard" });
+  const getTemplateVariables = (template: WhatsAppTemplate): number => {
+    const body = getTemplateBody(template);
+    const matches = body.match(/\{\{\d+\}\}/g);
+    return matches?.length || 0;
   };
+
+  const approvedTemplates = templates.filter(t => t.status === 'APPROVED');
+  const pendingTemplates = templates.filter(t => t.status === 'PENDING');
+  const rejectedTemplates = templates.filter(t => t.status === 'REJECTED');
 
   return (
     <MainLayout>
@@ -68,103 +73,132 @@ export default function Templates() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('messageTemplates')}</h1>
             <p className="mt-1 text-sm sm:text-base text-muted-foreground">
-              {t('createReusable')}
+              Templates from your WhatsApp Business Account
             </p>
           </div>
-          <Dialog open={isOpen} onOpenChange={(open) => {
-            setIsOpen(open);
-            if (!open) {
-              setFormData({ name: '', content: '' });
-              setEditingId(null);
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button variant="whatsapp" size="sm" className="sm:size-default w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                {t('newTemplate')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[95vw] sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{editingId ? t('editTemplate') : t('newTemplate')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="templateName">{t('templateName')}</Label>
-                  <Input
-                    id="templateName"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Welcome Message"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="templateContent">{t('messageContent')}</Label>
-                  <textarea
-                    id="templateContent"
-                    className="min-h-[150px] w-full rounded-lg border border-input bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Hello {{name}}! Welcome to our service..."
-                  />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t('placeholderHint')}
-                  </p>
-                </div>
-                <Button onClick={handleSave} className="w-full" variant="whatsapp">
-                  {editingId ? t('updateTemplate') : t('createTemplate')}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            variant="whatsapp" 
+            size="sm" 
+            className="sm:size-default w-full sm:w-auto"
+            onClick={loadTemplates}
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            {isLoading ? 'Loading...' : 'Refresh Templates'}
+          </Button>
         </div>
 
-        {/* Templates Grid */}
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className="rounded-xl border border-border bg-card p-4 sm:p-5 transition-all duration-300 hover:shadow-md animate-slide-up"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-card-foreground text-sm sm:text-base truncate">{template.name}</h3>
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleCopy(template.content)}
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                  >
-                    <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(template)}
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                  >
-                    <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeTemplate(template.id)}
-                    className="h-7 w-7 sm:h-8 sm:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                  </Button>
-                </div>
-              </div>
-              <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-4">
-                {template.content}
+        {/* Info Card */}
+        <div className="rounded-xl border border-info/30 bg-info/10 p-3 sm:p-4 animate-slide-up">
+          <div className="flex gap-3">
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-info shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm sm:text-base font-medium text-card-foreground">About Templates</h4>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                Templates must be created and approved in Meta Business Manager. Only approved templates can be used for batch messaging.
+                Variables like {"{{1}}"}, {"{{2}}"} will be replaced with contact data when sending.
               </p>
             </div>
-          ))}
+          </div>
         </div>
 
-        {templates.length === 0 && (
+        {/* Error State */}
+        {error && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 animate-fade-in">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        )}
+
+        {/* Stats */}
+        {templates.length > 0 && (
+          <div className="grid gap-3 grid-cols-3 animate-slide-up">
+            <div className="rounded-lg border border-border bg-card p-3 text-center">
+              <p className="text-2xl font-bold text-success">{approvedTemplates.length}</p>
+              <p className="text-xs text-muted-foreground">Approved</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-3 text-center">
+              <p className="text-2xl font-bold text-warning">{pendingTemplates.length}</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-3 text-center">
+              <p className="text-2xl font-bold text-destructive">{rejectedTemplates.length}</p>
+              <p className="text-xs text-muted-foreground">Rejected</p>
+            </div>
+          </div>
+        )}
+
+        {/* Templates Grid */}
+        {!isLoading && templates.length > 0 && (
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {templates.map((template) => {
+              const status = statusConfig[template.status];
+              const StatusIcon = status.icon;
+              const variableCount = getTemplateVariables(template);
+
+              return (
+                <div
+                  key={template.id}
+                  className="rounded-xl border border-border bg-card p-4 sm:p-5 transition-all duration-300 hover:shadow-md animate-slide-up"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-card-foreground text-sm sm:text-base truncate">
+                        {template.name}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <span className={cn("flex items-center gap-1 text-xs", status.color)}>
+                          <StatusIcon className="h-3 w-3" />
+                          {template.status}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {template.language}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {template.category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs sm:text-sm text-muted-foreground line-clamp-4 whitespace-pre-wrap">
+                    {getTemplateBody(template)}
+                  </p>
+                  {variableCount > 0 && (
+                    <p className="mt-2 text-xs text-info">
+                      {variableCount} variable{variableCount > 1 ? 's' : ''} required
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && templates.length === 0 && (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 sm:p-12 text-center animate-fade-in">
-            <p className="text-sm sm:text-base text-muted-foreground">{t('noTemplatesYet')}</p>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              No templates found. Create templates in Meta Business Manager.
+            </p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => window.open('https://business.facebook.com/wa/manage/message-templates/', '_blank')}
+            >
+              Open Meta Business Manager
+            </Button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-4 sm:p-5 animate-pulse">
+                <div className="h-5 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-1/2 mt-2"></div>
+                <div className="h-16 bg-muted rounded w-full mt-3"></div>
+              </div>
+            ))}
           </div>
         )}
       </div>
