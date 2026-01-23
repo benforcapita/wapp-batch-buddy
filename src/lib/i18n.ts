@@ -40,6 +40,21 @@ export const translations = {
     
     // Templates
     messageTemplates: 'Message Templates',
+    templatesFromAccount: 'Templates from your WhatsApp Business Account',
+    refreshTemplates: 'Refresh Templates',
+    loading: 'Loading...',
+    aboutTemplates: 'About Templates',
+    aboutTemplatesDescription: 'Templates must be created and approved in Meta Business Manager. Only approved templates can be used for batch messaging. Variables like {{1}}, {{2}} will be replaced with contact data when sending.',
+    approved: 'Approved',
+    pendingStatus: 'Pending',
+    rejected: 'Rejected',
+    variablesRequired: 'variable(s) required',
+    noTemplatesFound: 'No templates found. Create templates in Meta Business Manager.',
+    openMetaBusinessManager: 'Open Meta Business Manager',
+    templatesLoaded: 'Templates loaded',
+    foundTemplates: 'Found templates',
+    error: 'Error',
+    configureCredentials: 'Please configure your WhatsApp Business API credentials in Settings.',
     createReusable: 'Create reusable message templates with placeholders',
     newTemplate: 'New Template',
     templateName: 'Template Name',
@@ -78,9 +93,9 @@ export const translations = {
     noMessagesMatch: 'No messages match your search criteria.',
     
     // Settings
-    configurePreferences: 'Configure your WhatsApp messaging preferences',
+    configurePreferences: 'Configure your WhatsApp Business API settings',
     howItWorks: 'How it works',
-    howItWorksDescription: 'This tool opens WhatsApp Web links for each contact with your pre-filled message. Make sure you\'re logged into WhatsApp Web in your browser. Each message opens in a new tab where you just need to click Send.',
+    howItWorksDescription: 'This app sends messages via the WhatsApp Business API. You need an approved Meta Business account, WhatsApp Business API access, and pre-approved message templates. Messages are sent automatically through the API.',
     
     // Settings - General
     generalSettings: 'General Settings',
@@ -90,37 +105,62 @@ export const translations = {
     languageHint: 'Select your preferred language',
     
     // Settings - WhatsApp Business
-    whatsappBusinessSettings: 'WhatsApp Business API Settings',
-    whatsappBusinessDescription: 'Configure your WhatsApp Business API credentials for automated messaging',
+    whatsappBusinessSettings: 'WhatsApp Business API',
+    whatsappBusinessDescription: 'Get these credentials from Meta Developer Portal → WhatsApp → API Setup',
     phoneNumberId: 'Phone Number ID',
-    phoneNumberIdHint: 'Your WhatsApp Business phone number ID from Meta',
+    phoneNumberIdHint: 'Found in API Setup → Phone number ID (numeric)',
     businessAccountId: 'Business Account ID',
-    businessAccountIdHint: 'Your WhatsApp Business Account ID (WABA)',
+    businessAccountIdHint: 'Found in API Setup → WhatsApp Business Account ID (for fetching templates)',
     accessToken: 'Access Token',
-    accessTokenHint: 'Your permanent access token from Meta Developer Portal',
+    accessTokenHint: 'Generate in API Setup or create a System User for permanent token',
     apiVersion: 'API Version',
-    apiVersionHint: 'WhatsApp Business API version (e.g., v18.0)',
-    webhookUrl: 'Webhook URL',
-    webhookUrlHint: 'URL to receive message delivery status updates',
-    webhookVerifyToken: 'Webhook Verify Token',
-    webhookVerifyTokenHint: 'Token used to verify webhook requests',
+    apiVersionHint: 'Current version: v18.0, v19.0, or v20.0',
     
     // Settings - Messaging
     messagingSettings: 'Messaging Settings',
     defaultCountryCode: 'Default Country Code',
-    defaultCountryCodeHint: 'Applied to phone numbers without a country code',
+    defaultCountryCodeHint: 'Applied to phone numbers without a country code (e.g., +972 for Israel)',
     delayBetweenMessages: 'Delay Between Messages (seconds)',
-    delayHint: 'Time to wait between opening each WhatsApp message (1-60 seconds)',
+    delayHint: 'Time to wait between sending each message to avoid rate limits',
     maxMessagesPerDay: 'Max Messages Per Day',
-    maxMessagesHint: 'Recommended limit to avoid WhatsApp restrictions',
+    maxMessagesHint: 'Your limit depends on your tier: Unverified=250, Tier 1=1K, Tier 2=10K',
     
     // Settings - Warning
     importantNotice: 'Important Notice',
-    warningText: 'This tool is for legitimate business communication only. Sending spam or unsolicited messages may result in your WhatsApp account being banned. Always ensure you have consent from recipients before messaging them.',
+    warningText: 'Only send messages to users who have opted in. Spam or unsolicited messages will hurt your quality rating and may result in account restrictions. Maintain a high-quality rating to increase your messaging tier.',
     
     saveSettings: 'Save Settings',
     settingsSaved: 'Settings Saved',
     settingsSavedDescription: 'Your settings have been saved successfully.',
+    
+    // Settings - Config
+    configuration: 'Configuration',
+    configDescription: 'Export your settings to a JSON file or import from a saved config.',
+    exportConfig: 'Export Config',
+    importConfig: 'Import Config',
+    reload: 'Reload',
+    configExported: 'Config Exported',
+    configExportedDescription: 'Settings exported to JSON file.',
+    configImported: 'Config Imported',
+    configImportedDescription: 'Settings loaded from config file.',
+    importFailed: 'Import Failed',
+    settingsReloaded: 'Settings Reloaded',
+    settingsReloadedDescription: 'Settings reloaded from local storage.',
+    
+    // Settings - Connection
+    testConnection: 'Test API Connection',
+    testing: 'Testing...',
+    connectionVerified: 'Connection Verified',
+    connectionSuccessful: 'Connection Successful',
+    connectionSuccessfulDescription: 'Your WhatsApp Business API credentials are valid.',
+    connectionFailed: 'Connection Failed',
+    connectionFailedDescription: 'Could not validate credentials. Check your Phone Number ID and Access Token.',
+    connectionError: 'Connection Error',
+    missingCredentials: 'Missing Credentials',
+    missingCredentialsDescription: 'Please enter Phone Number ID and Access Token first.',
+    apiConfigured: 'API credentials configured - go to Templates to verify connection',
+    missingRequired: 'Missing required credentials (*)',
+    settingsAutoSave: 'Settings are saved automatically as you type',
   },
   he: {
     // Navigation
@@ -163,6 +203,21 @@ export const translations = {
     
     // Templates
     messageTemplates: 'תבניות הודעות',
+    templatesFromAccount: 'תבניות מחשבון WhatsApp Business שלך',
+    refreshTemplates: 'רענן תבניות',
+    loading: 'טוען...',
+    aboutTemplates: 'אודות תבניות',
+    aboutTemplatesDescription: 'יש ליצור ולאשר תבניות ב-Meta Business Manager. רק תבניות מאושרות יכולות לשמש לשליחה המונית. משתנים כמו {{1}}, {{2}} יוחלפו בנתוני איש הקשר בעת השליחה.',
+    approved: 'מאושר',
+    pendingStatus: 'ממתין',
+    rejected: 'נדחה',
+    variablesRequired: 'משתנים נדרשים',
+    noTemplatesFound: 'לא נמצאו תבניות. צור תבניות ב-Meta Business Manager.',
+    openMetaBusinessManager: 'פתח Meta Business Manager',
+    templatesLoaded: 'תבניות נטענו',
+    foundTemplates: 'נמצאו תבניות',
+    error: 'שגיאה',
+    configureCredentials: 'נא להגדיר את פרטי WhatsApp Business API בהגדרות.',
     createReusable: 'צור תבניות הודעות לשימוש חוזר עם מקומות שמורים',
     newTemplate: 'תבנית חדשה',
     templateName: 'שם התבנית',
@@ -201,9 +256,9 @@ export const translations = {
     noMessagesMatch: 'אין הודעות התואמות לקריטריוני החיפוש שלך.',
     
     // Settings
-    configurePreferences: 'הגדר את העדפות ההודעות שלך בוואטסאפ',
+    configurePreferences: 'הגדר את חיבור ה-WhatsApp Business API שלך',
     howItWorks: 'איך זה עובד',
-    howItWorksDescription: 'כלי זה פותח קישורי WhatsApp Web לכל איש קשר עם ההודעה הממולאה מראש שלך. וודא שאתה מחובר ל-WhatsApp Web בדפדפן שלך. כל הודעה נפתחת בלשונית חדשה שבה אתה רק צריך ללחוץ על שלח.',
+    howItWorksDescription: 'האפליקציה שולחת הודעות דרך WhatsApp Business API. נדרש חשבון Meta Business מאושר, גישה ל-API, ותבניות הודעות מאושרות מראש. ההודעות נשלחות אוטומטית דרך ה-API.',
     
     // Settings - General
     generalSettings: 'הגדרות כלליות',
@@ -213,37 +268,62 @@ export const translations = {
     languageHint: 'בחר את השפה המועדפת עליך',
     
     // Settings - WhatsApp Business
-    whatsappBusinessSettings: 'הגדרות WhatsApp Business API',
-    whatsappBusinessDescription: 'הגדר את פרטי ה-API של WhatsApp Business להודעות אוטומטיות',
+    whatsappBusinessSettings: 'WhatsApp Business API',
+    whatsappBusinessDescription: 'קבל את הפרטים מ-Meta Developer Portal → WhatsApp → API Setup',
     phoneNumberId: 'מזהה מספר טלפון',
-    phoneNumberIdHint: 'מזהה מספר הטלפון העסקי שלך מ-Meta',
+    phoneNumberIdHint: 'נמצא ב-API Setup → Phone number ID (מספרי)',
     businessAccountId: 'מזהה חשבון עסקי',
-    businessAccountIdHint: 'מזהה חשבון WhatsApp Business שלך (WABA)',
+    businessAccountIdHint: 'נמצא ב-API Setup → WhatsApp Business Account ID (לשליפת תבניות)',
     accessToken: 'אסימון גישה',
-    accessTokenHint: 'אסימון הגישה הקבוע שלך מפורטל המפתחים של Meta',
+    accessTokenHint: 'צור ב-API Setup או צור System User לאסימון קבוע',
     apiVersion: 'גרסת API',
-    apiVersionHint: 'גרסת WhatsApp Business API (למשל v18.0)',
-    webhookUrl: 'כתובת Webhook',
-    webhookUrlHint: 'כתובת URL לקבלת עדכוני סטטוס מסירת הודעות',
-    webhookVerifyToken: 'אסימון אימות Webhook',
-    webhookVerifyTokenHint: 'אסימון המשמש לאימות בקשות webhook',
+    apiVersionHint: 'גרסה נוכחית: v18.0, v19.0, או v20.0',
     
     // Settings - Messaging
     messagingSettings: 'הגדרות הודעות',
     defaultCountryCode: 'קידומת מדינה ברירת מחדל',
-    defaultCountryCodeHint: 'מוחל על מספרי טלפון ללא קידומת מדינה',
+    defaultCountryCodeHint: 'מוחל על מספרי טלפון ללא קידומת (למשל 972+ לישראל)',
     delayBetweenMessages: 'השהייה בין הודעות (שניות)',
-    delayHint: 'זמן המתנה בין פתיחת כל הודעת WhatsApp (1-60 שניות)',
+    delayHint: 'זמן המתנה בין שליחת כל הודעה למניעת חסימת קצב',
     maxMessagesPerDay: 'מקסימום הודעות ביום',
-    maxMessagesHint: 'מגבלה מומלצת למניעת חסימות WhatsApp',
+    maxMessagesHint: 'המגבלה תלויה בדרגה שלך: לא מאומת=250, דרגה 1=1K, דרגה 2=10K',
     
     // Settings - Warning
     importantNotice: 'הודעה חשובה',
-    warningText: 'כלי זה מיועד לתקשורת עסקית לגיטימית בלבד. שליחת ספאם או הודעות לא רצויות עלולה לגרום לחסימת חשבון ה-WhatsApp שלך. תמיד וודא שיש לך הסכמה מהנמענים לפני שאתה שולח להם הודעות.',
+    warningText: 'שלח הודעות רק למשתמשים שנתנו הסכמה. ספאם או הודעות לא רצויות יפגעו בדירוג האיכות שלך ועלולות לגרום להגבלות על החשבון. שמור על דירוג איכות גבוה כדי להעלות את דרגת ההודעות שלך.',
     
     saveSettings: 'שמור הגדרות',
     settingsSaved: 'ההגדרות נשמרו',
     settingsSavedDescription: 'ההגדרות שלך נשמרו בהצלחה.',
+    
+    // Settings - Config
+    configuration: 'תצורה',
+    configDescription: 'ייצא את ההגדרות לקובץ JSON או ייבא מתצורה שמורה.',
+    exportConfig: 'ייצוא תצורה',
+    importConfig: 'ייבוא תצורה',
+    reload: 'טען מחדש',
+    configExported: 'התצורה יוצאה',
+    configExportedDescription: 'ההגדרות יוצאו לקובץ JSON.',
+    configImported: 'התצורה יובאה',
+    configImportedDescription: 'ההגדרות נטענו מקובץ תצורה.',
+    importFailed: 'הייבוא נכשל',
+    settingsReloaded: 'ההגדרות נטענו מחדש',
+    settingsReloadedDescription: 'ההגדרות נטענו מחדש מהאחסון המקומי.',
+    
+    // Settings - Connection
+    testConnection: 'בדוק חיבור API',
+    testing: 'בודק...',
+    connectionVerified: 'החיבור אומת',
+    connectionSuccessful: 'החיבור הצליח',
+    connectionSuccessfulDescription: 'פרטי ה-WhatsApp Business API שלך תקינים.',
+    connectionFailed: 'החיבור נכשל',
+    connectionFailedDescription: 'לא ניתן לאמת את הפרטים. בדוק את מזהה מספר הטלפון ואסימון הגישה.',
+    connectionError: 'שגיאת חיבור',
+    missingCredentials: 'חסרים פרטים',
+    missingCredentialsDescription: 'נא להזין מזהה מספר טלפון ואסימון גישה קודם.',
+    apiConfigured: 'פרטי ה-API הוגדרו - עבור לתבניות כדי לאמת את החיבור',
+    missingRequired: 'חסרים פרטים נדרשים (*)',
+    settingsAutoSave: 'ההגדרות נשמרות אוטומטית בזמן ההקלדה',
   },
 };
 

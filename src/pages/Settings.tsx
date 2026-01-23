@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/store/appStore';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Save, AlertCircle, Info, Globe, Download, Upload, RefreshCw, FileJson } from 'lucide-react';
+import { AlertCircle, Info, Globe, Download, Upload, RefreshCw, FileJson, CheckCircle, Loader2 } from 'lucide-react';
+import { validateWhatsAppCredentials } from '@/lib/whatsapp-api';
 import {
   Select,
   SelectContent,
@@ -22,12 +23,48 @@ export default function Settings() {
   const { toast } = useToast();
   const { t, setLanguage, language } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const handleSave = () => {
-    toast({
-      title: t('settingsSaved'),
-      description: t('settingsSavedDescription'),
-    });
+  const handleTestConnection = async () => {
+    if (!settings.phoneNumberId || !settings.accessToken) {
+      toast({
+        title: t('missingCredentials'),
+        description: t('missingCredentialsDescription'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsTesting(true);
+    setConnectionStatus('idle');
+
+    try {
+      const isValid = await validateWhatsAppCredentials();
+      if (isValid) {
+        setConnectionStatus('success');
+        toast({
+          title: t('connectionSuccessful'),
+          description: t('connectionSuccessfulDescription'),
+        });
+      } else {
+        setConnectionStatus('error');
+        toast({
+          title: t('connectionFailed'),
+          description: t('connectionFailedDescription'),
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      setConnectionStatus('error');
+      toast({
+        title: t('connectionError'),
+        description: error instanceof Error ? error.message : t('connectionFailed'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const handleLanguageChange = (value: 'en' | 'he') => {
@@ -53,8 +90,8 @@ export default function Settings() {
     URL.revokeObjectURL(url);
     
     toast({
-      title: 'Config Exported',
-      description: 'Settings exported to JSON file.',
+      title: t('configExported'),
+      description: t('configExportedDescription'),
     });
   };
 
@@ -75,13 +112,13 @@ export default function Settings() {
         updateSettings(config.settings);
         
         toast({
-          title: 'Config Imported',
-          description: 'Settings loaded from config file.',
+          title: t('configImported'),
+          description: t('configImportedDescription'),
         });
       } catch (error) {
         toast({
-          title: 'Import Failed',
-          description: error instanceof Error ? error.message : 'Failed to parse config file.',
+          title: t('importFailed'),
+          description: error instanceof Error ? error.message : t('importFailed'),
           variant: 'destructive',
         });
       }
@@ -97,8 +134,8 @@ export default function Settings() {
   const handleReloadFromStorage = () => {
     loadFromStorage();
     toast({
-      title: 'Settings Reloaded',
-      description: 'Settings reloaded from local storage.',
+      title: t('settingsReloaded'),
+      description: t('settingsReloadedDescription'),
     });
   };
 
@@ -118,22 +155,22 @@ export default function Settings() {
           <div className="flex items-center gap-2">
             <FileJson className="h-4 w-4 sm:h-5 sm:w-5" />
             <h3 className="text-base sm:text-lg font-semibold text-card-foreground">
-              Configuration
+              {t('configuration')}
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Export your settings to a JSON file or import from a saved config.
+            {t('configDescription')}
           </p>
           
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleExportConfig}>
               <Download className="h-4 w-4" />
-              Export Config
+              {t('exportConfig')}
             </Button>
             
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
               <Upload className="h-4 w-4" />
-              Import Config
+              {t('importConfig')}
             </Button>
             <input
               ref={fileInputRef}
@@ -145,7 +182,7 @@ export default function Settings() {
             
             <Button variant="outline" size="sm" onClick={handleReloadFromStorage}>
               <RefreshCw className="h-4 w-4" />
-              Reload
+              {t('reload')}
             </Button>
           </div>
         </div>
@@ -212,38 +249,36 @@ export default function Settings() {
             </p>
           </div>
           
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="phoneNumberId" className="text-sm">{t('phoneNumberId')}</Label>
-              <Input
-                id="phoneNumberId"
-                value={settings.phoneNumberId}
-                onChange={(e) => updateSettings({ phoneNumberId: e.target.value })}
-                placeholder="123456789012345"
-                className="mt-2"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t('phoneNumberIdHint')}
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="businessAccountId" className="text-sm">{t('businessAccountId')}</Label>
-              <Input
-                id="businessAccountId"
-                value={settings.businessAccountId}
-                onChange={(e) => updateSettings({ businessAccountId: e.target.value })}
-                placeholder="123456789012345"
-                className="mt-2"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t('businessAccountIdHint')}
-              </p>
-            </div>
+          <div>
+            <Label htmlFor="phoneNumberId" className="text-sm">{t('phoneNumberId')} *</Label>
+            <Input
+              id="phoneNumberId"
+              value={settings.phoneNumberId}
+              onChange={(e) => updateSettings({ phoneNumberId: e.target.value })}
+              placeholder="123456789012345"
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('phoneNumberIdHint')}
+            </p>
           </div>
 
           <div>
-            <Label htmlFor="accessToken" className="text-sm">{t('accessToken')}</Label>
+            <Label htmlFor="businessAccountId" className="text-sm">{t('businessAccountId')} *</Label>
+            <Input
+              id="businessAccountId"
+              value={settings.businessAccountId}
+              onChange={(e) => updateSettings({ businessAccountId: e.target.value })}
+              placeholder="123456789012345"
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('businessAccountIdHint')}
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="accessToken" className="text-sm">{t('accessToken')} *</Label>
             <Input
               id="accessToken"
               type="password"
@@ -257,48 +292,28 @@ export default function Settings() {
             </p>
           </div>
 
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="apiVersion" className="text-sm">{t('apiVersion')}</Label>
-              <Input
-                id="apiVersion"
-                value={settings.apiVersion}
-                onChange={(e) => updateSettings({ apiVersion: e.target.value })}
-                placeholder="v18.0"
-                className="mt-2"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t('apiVersionHint')}
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="webhookUrl" className="text-sm">{t('webhookUrl')}</Label>
-              <Input
-                id="webhookUrl"
-                value={settings.webhookUrl}
-                onChange={(e) => updateSettings({ webhookUrl: e.target.value })}
-                placeholder="https://your-domain.com/webhook"
-                className="mt-2"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t('webhookUrlHint')}
-              </p>
-            </div>
-          </div>
-
           <div>
-            <Label htmlFor="webhookVerifyToken" className="text-sm">{t('webhookVerifyToken')}</Label>
+            <Label htmlFor="apiVersion" className="text-sm">{t('apiVersion')}</Label>
             <Input
-              id="webhookVerifyToken"
-              value={settings.webhookVerifyToken}
-              onChange={(e) => updateSettings({ webhookVerifyToken: e.target.value })}
-              placeholder="your-verify-token"
+              id="apiVersion"
+              value={settings.apiVersion}
+              onChange={(e) => updateSettings({ apiVersion: e.target.value })}
+              placeholder="v18.0"
               className="mt-2"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              {t('webhookVerifyTokenHint')}
+              {t('apiVersionHint')}
             </p>
+          </div>
+
+          {/* Connection status indicator */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+            <div className={`h-2 w-2 rounded-full ${settings.phoneNumberId && settings.businessAccountId && settings.accessToken ? 'bg-success' : 'bg-muted-foreground'}`} />
+            <span className="text-xs text-muted-foreground">
+              {settings.phoneNumberId && settings.businessAccountId && settings.accessToken 
+                ? t('apiConfigured')
+                : t('missingRequired')}
+            </span>
           </div>
         </div>
 
@@ -368,10 +383,25 @@ export default function Settings() {
           </div>
         </div>
 
-        <Button onClick={handleSave} variant="whatsapp" className="w-full">
-          <Save className="h-4 w-4" />
-          {t('saveSettings')}
+        <Button 
+          onClick={handleTestConnection} 
+          variant="whatsapp" 
+          className="w-full"
+          disabled={isTesting || !settings.phoneNumberId || !settings.accessToken}
+        >
+          {isTesting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : connectionStatus === 'success' ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          {isTesting ? t('testing') : connectionStatus === 'success' ? t('connectionVerified') : t('testConnection')}
         </Button>
+
+        <p className="text-xs text-center text-muted-foreground">
+          {t('settingsAutoSave')}
+        </p>
       </div>
     </MainLayout>
   );

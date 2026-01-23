@@ -24,7 +24,7 @@ export default function Templates() {
 
   const loadTemplates = async () => {
     if (!settings.businessAccountId || !settings.accessToken) {
-      setError('Please configure your WhatsApp Business API credentials in Settings.');
+      setError(t('configureCredentials'));
       return;
     }
 
@@ -34,11 +34,11 @@ export default function Templates() {
     try {
       const data = await fetchWhatsAppTemplates();
       setTemplates(data);
-      toast({ title: 'Templates loaded', description: `Found ${data.length} templates.` });
+      toast({ title: t('templatesLoaded'), description: `${t('foundTemplates')}: ${data.length}` });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load templates';
+      const message = err instanceof Error ? err.message : t('error');
       setError(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      toast({ title: t('error'), description: message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -48,11 +48,12 @@ export default function Templates() {
     if (settings.businessAccountId && settings.accessToken) {
       loadTemplates();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.businessAccountId, settings.accessToken]);
 
   const getTemplateBody = (template: WhatsAppTemplate): string => {
     const bodyComponent = template.components.find(c => c.type === 'BODY');
-    return bodyComponent?.text || 'No body text';
+    return bodyComponent?.text || '';
   };
 
   const getTemplateVariables = (template: WhatsAppTemplate): number => {
@@ -73,7 +74,7 @@ export default function Templates() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('messageTemplates')}</h1>
             <p className="mt-1 text-sm sm:text-base text-muted-foreground">
-              Templates from your WhatsApp Business Account
+              {t('templatesFromAccount')}
             </p>
           </div>
           <Button 
@@ -84,7 +85,7 @@ export default function Templates() {
             disabled={isLoading}
           >
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            {isLoading ? 'Loading...' : 'Refresh Templates'}
+            {isLoading ? t('loading') : t('refreshTemplates')}
           </Button>
         </div>
 
@@ -93,10 +94,9 @@ export default function Templates() {
           <div className="flex gap-3">
             <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-info shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm sm:text-base font-medium text-card-foreground">About Templates</h4>
+              <h4 className="text-sm sm:text-base font-medium text-card-foreground">{t('aboutTemplates')}</h4>
               <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                Templates must be created and approved in Meta Business Manager. Only approved templates can be used for batch messaging.
-                Variables like {"{{1}}"}, {"{{2}}"} will be replaced with contact data when sending.
+                {t('aboutTemplatesDescription')}
               </p>
             </div>
           </div>
@@ -114,15 +114,15 @@ export default function Templates() {
           <div className="grid gap-3 grid-cols-3 animate-slide-up">
             <div className="rounded-lg border border-border bg-card p-3 text-center">
               <p className="text-2xl font-bold text-success">{approvedTemplates.length}</p>
-              <p className="text-xs text-muted-foreground">Approved</p>
+              <p className="text-xs text-muted-foreground">{t('approved')}</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-3 text-center">
               <p className="text-2xl font-bold text-warning">{pendingTemplates.length}</p>
-              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-xs text-muted-foreground">{t('pendingStatus')}</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-3 text-center">
               <p className="text-2xl font-bold text-destructive">{rejectedTemplates.length}</p>
-              <p className="text-xs text-muted-foreground">Rejected</p>
+              <p className="text-xs text-muted-foreground">{t('rejected')}</p>
             </div>
           </div>
         )}
@@ -148,7 +148,7 @@ export default function Templates() {
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className={cn("flex items-center gap-1 text-xs", status.color)}>
                           <StatusIcon className="h-3 w-3" />
-                          {template.status}
+                          {template.status === 'APPROVED' ? t('approved') : template.status === 'PENDING' ? t('pendingStatus') : t('rejected')}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {template.language}
@@ -164,7 +164,7 @@ export default function Templates() {
                   </p>
                   {variableCount > 0 && (
                     <p className="mt-2 text-xs text-info">
-                      {variableCount} variable{variableCount > 1 ? 's' : ''} required
+                      {variableCount} {t('variablesRequired')}
                     </p>
                   )}
                 </div>
@@ -177,14 +177,14 @@ export default function Templates() {
         {!isLoading && !error && templates.length === 0 && (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 sm:p-12 text-center animate-fade-in">
             <p className="text-sm sm:text-base text-muted-foreground">
-              No templates found. Create templates in Meta Business Manager.
+              {t('noTemplatesFound')}
             </p>
             <Button 
               variant="outline" 
               className="mt-4"
               onClick={() => window.open('https://business.facebook.com/wa/manage/message-templates/', '_blank')}
             >
-              Open Meta Business Manager
+              {t('openMetaBusinessManager')}
             </Button>
           </div>
         )}
