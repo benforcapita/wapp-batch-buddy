@@ -61,7 +61,7 @@ const defaultSettings: Settings = {
   phoneNumberId: '',
   businessAccountId: '',
   accessToken: '',
-  apiVersion: 'v18.0',
+  apiVersion: 'v22.0',
   webhookUrl: '',
   webhookVerifyToken: '',
   

@@ -169,8 +169,10 @@ export default function Campaigns() {
       const contact = contacts.find(c => c.id === contactId);
       if (!contact) continue;
 
-      // Build variables array - {{1}} = name by default
-      const variables = [contact.name];
+      // Build variables array - only if template has {{1}} placeholder
+      const templateBody = template.components.find(c => c.type === 'BODY')?.text || '';
+      const hasVariables = /\{\{\d+\}\}/.test(templateBody);
+      const variables = hasVariables ? [contact.name] : [];
       
       try {
         // Send via WhatsApp Business API using template

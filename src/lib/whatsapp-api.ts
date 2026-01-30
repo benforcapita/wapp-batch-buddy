@@ -135,9 +135,12 @@ export const sendWhatsAppTemplateMessage = async (
   }
 
   // Ensure phone number has international format (digits only)
+  // Strip leading 0 from local numbers when adding country code
+  let cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+  
   const formattedPhone = phoneNumber.startsWith('+') 
-    ? phoneNumber.replace(/[^0-9]/g, '')
-    : `${settings.defaultCountryCode.replace(/[^0-9]/g, '')}${phoneNumber.replace(/[^0-9]/g, '')}`;
+    ? cleanPhone
+    : `${settings.defaultCountryCode.replace(/[^0-9]/g, '')}${cleanPhone.replace(/^0+/, '')}`;
 
   // Build template components with variables
   const components: Array<{ type: string; parameters: Array<{ type: string; text: string }> }> = [];
