@@ -153,6 +153,20 @@ export const sendWhatsAppTemplateMessage = async (
   }
 
   try {
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: formattedPhone,
+      type: 'template',
+      template: {
+        name: templateName,
+        language: { code: languageCode },
+        ...(components.length > 0 && { components })
+      }
+    };
+    
+    // Debug: log the payload being sent
+    console.log('WhatsApp API Payload:', JSON.stringify(payload, null, 2));
+    
     const response = await fetch(
       `https://graph.facebook.com/${settings.apiVersion}/${settings.phoneNumberId}/messages`,
       {
@@ -161,16 +175,7 @@ export const sendWhatsAppTemplateMessage = async (
           'Authorization': `Bearer ${settings.accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: formattedPhone,
-          type: 'template',
-          template: {
-            name: templateName,
-            language: { code: languageCode },
-            ...(components.length > 0 && { components })
-          }
-        })
+        body: JSON.stringify(payload)
       }
     );
 

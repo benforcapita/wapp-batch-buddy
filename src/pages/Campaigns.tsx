@@ -81,6 +81,14 @@ export default function Campaigns() {
     return bodyComponent?.text || '';
   };
 
+  // Count how many parameters ({{1}}, {{2}}, etc.) a template has
+  const countTemplateParameters = (template: WhatsAppTemplate): number => {
+    const bodyComponent = template.components.find(c => c.type === 'BODY');
+    const bodyText = bodyComponent?.text || '';
+    const matches = bodyText.match(/\{\{\d+\}\}/g);
+    return matches ? matches.length : 0;
+  };
+
   const handleTemplateSelect = (templateId: string) => {
     const template = apiTemplates.find(t => t.id === templateId);
     if (template) {
@@ -169,10 +177,21 @@ export default function Campaigns() {
       const contact = contacts.find(c => c.id === contactId);
       if (!contact) continue;
 
-      // Build variables array - only if template has {{1}} placeholder
-      const templateBody = template.components.find(c => c.type === 'BODY')?.text || '';
-      const hasVariables = /\{\{\d+\}\}/.test(templateBody);
-      const variables = hasVariables ? [contact.name] : [];
+      // Build variables array based on how many parameters the template needs
+      // {{1}} = contact name, {{2}} = contact phone, {{3}}+ = empty string
+      const paramCount = countTemplateParameters(template);
+      const variables: string[] = [];
+      
+      for (let p = 1; p <= paramCount; p++) {
+        if (p === 1) {
+          variables.push(contact.name);
+        } else if (p === 2) {
+          variables.push(contact.phone);
+        } else {
+          // For {{3}} and beyond, use empty string (or could be extended with custom fields)
+          variables.push('');
+        }
+      }
       
       try {
         // Send via WhatsApp Business API using template
