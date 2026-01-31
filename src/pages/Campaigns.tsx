@@ -45,6 +45,7 @@ export default function Campaigns() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [templateVariables, setTemplateVariables] = useState<string[]>([]);
   const [apiTemplates, setApiTemplates] = useState<WhatsAppTemplate[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [formData, setFormData] = useState({
@@ -103,6 +104,7 @@ export default function Campaigns() {
   const handleTemplateSelect = (templateId: string) => {
     const template = apiTemplates.find(t => t.id === templateId);
     if (template) {
+      const paramCount = countTemplateParameters(template);
       setFormData({ 
         ...formData, 
         templateId,
@@ -110,8 +112,36 @@ export default function Campaigns() {
         templateLanguage: template.language,
         templateBody: getTemplateBody(template),
       });
+      setTemplateVariables(Array.from({ length: paramCount }, () => ''));
     }
   };
+
+  const updateTemplateVariable = (index: number, value: string) => {
+    setTemplateVariables((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const resolveTemplateVariable = (
+    index: number,
+    overrides: string[] | undefined,
+    fallback: { name: string; phone: string }
+  ) => {
+    const override = overrides?.[index];
+    if (override && override.trim()) return override;
+    if (index === 0) return fallback.name;
+    if (index === 1) return fallback.phone;
+    return '';
+  };
+
+  const renderTemplateMessage = (templateBody: string, values: string[]) =>
+    values.reduce(
+      (message, value, index) =>
+        message.replace(new RegExp(`\\{\\{${index + 1}\\}\\}`, 'g'), value),
+      templateBody
+    );
 
   const toggleContact = (contactId: string) => {
     setSelectedContacts(prev =>
@@ -159,10 +189,12 @@ export default function Campaigns() {
       contacts: selectedContacts,
       status: 'draft',
       totalCount: selectedContacts.length,
+      templateVariables,
     });
 
     setFormData({ name: '', templateId: '', templateName: '', templateLanguage: '', templateBody: '' });
     setSelectedContacts([]);
+    setTemplateVariables([]);
     setIsOpen(false);
     toast({ title: t('createCampaign') });
   };
@@ -204,18 +236,10 @@ export default function Campaigns() {
       // Build variables array based on how many parameters the template needs
       // {{1}} = contact name, {{2}} = contact phone, {{3}}+ = empty string
       const paramCount = countTemplateParameters(template);
-      const variables: string[] = [];
-      
-      for (let p = 1; p <= paramCount; p++) {
-        if (p === 1) {
-          variables.push(contact.name);
-        } else if (p === 2) {
-          variables.push(contact.phone);
-        } else {
-          // For {{3}} and beyond, use empty string (or could be extended with custom fields)
-          variables.push('');
-        }
-      }
+      const variables = Array.from({ length: paramCount }, (_, index) =>
+        resolveTemplateVariable(index, campaign.templateVariables, contact)
+      );
+      const renderedMessage = renderTemplateMessage(campaign.message, variables);
       
       try {
         // Send via WhatsApp Business API using template
@@ -231,7 +255,7 @@ export default function Campaigns() {
           contactId: contact.id,
           contactName: contact.name,
           contactPhone: contact.phone,
-          message: `[Template: ${template.name}] ${campaign.message}`.replace(/\{\{1\}\}/g, contact.name),
+          message: `[Template: ${template.name}] ${renderedMessage}`,
           status: 'sent',
           sentAt: new Date().toISOString(),
         });
@@ -242,7 +266,7 @@ export default function Campaigns() {
           contactId: contact.id,
           contactName: contact.name,
           contactPhone: contact.phone,
-          message: `[Template: ${template.name}] ${campaign.message}`,
+          message: `[Template: ${template.name}] ${renderedMessage}`,
           status: 'failed',
           sentAt: new Date().toISOString(),
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -268,6 +292,18 @@ export default function Campaigns() {
       variant: failCount > 0 ? "destructive" : "default",
     });
   };
+
+  const previewContact = contacts.find((contact) => selectedContacts.includes(contact.id)) ?? contacts[0];
+  const previewFallback = {
+    name: previewContact?.name ?? t('contactNamePlaceholder'),
+    phone: previewContact?.phone ?? t('contactPhonePlaceholder'),
+  };
+  const previewValues = templateVariables.map((_, index) =>
+    resolveTemplateVariable(index, templateVariables, previewFallback)
+  );
+  const templatePreview = formData.templateBody
+    ? renderTemplateMessage(formData.templateBody, previewValues)
+    : '';
 
   return (
     <MainLayout>
@@ -335,14 +371,52 @@ export default function Campaigns() {
                 </div>
 
                 {formData.templateBody && (
-                  <div>
-                    <Label>Template Preview</Label>
-                    <div className="mt-2 p-3 rounded-lg border border-border bg-muted/30 text-sm whitespace-pre-wrap">
-                      {formData.templateBody}
+                  <div className="space-y-4">
+                    {templateVariables.length > 0 && (
+                      <div>
+                        <Label>{t('templateVariables')}</Label>
+                        <div className="mt-2 space-y-3">
+                          {templateVariables.map((value, index) => (
+                            <div key={`template-variable-${index}`} className="space-y-1">
+                              <Label
+                                htmlFor={`template-variable-${index}`}
+                                className="text-xs sm:text-sm"
+                              >
+                                {t('templateVariable')} {index + 1}
+                              </Label>
+                              <Input
+                                id={`template-variable-${index}`}
+                                value={value}
+                                onChange={(event) => updateTemplateVariable(index, event.target.value)}
+                                placeholder={
+                                  index === 0
+                                    ? t('contactNamePlaceholder')
+                                    : index === 1
+                                      ? t('contactPhonePlaceholder')
+                                      : t('optionalValue')
+                                }
+                              />
+                              <p className="text-xs text-muted-foreground">
+                                {index === 0
+                                  ? t('defaultContactName')
+                                  : index === 1
+                                    ? t('defaultContactPhone')
+                                    : t('optionalValue')}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <Label>{t('templatePreview')}</Label>
+                      <div className="mt-2 p-3 rounded-lg border border-border bg-muted/30 text-sm whitespace-pre-wrap">
+                        {templatePreview}
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t('templatePreviewHint')}
+                      </p>
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {"{{1}}"} will be replaced with the contact's name
-                    </p>
                   </div>
                 )}
 
