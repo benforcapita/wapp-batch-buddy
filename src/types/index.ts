@@ -19,6 +19,7 @@ export interface Campaign {
   status: 'draft' | 'scheduled' | 'sending' | 'completed' | 'failed';
   contacts: string[];
   template?: string;
+  templateVariables?: string[];
   message: string;
   scheduledAt?: Date | string;
   sentCount: number;

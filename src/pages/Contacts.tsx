@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Plus, Upload, Search, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Plus, Upload, Search, Trash2, Download } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/store/appStore';
+import type { Contact } from '@/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
@@ -21,6 +22,119 @@ const contactSchema = z.object({
   phone: z.string().trim().min(1, "Phone is required").max(20),
 });
 
+const parseCsv = (input: string): string[][] => {
+  const rows: string[][] = [];
+  const normalized = input.replace(/^\uFEFF/, '');
+  let current = '';
+  let row: string[] = [];
+  let inQuotes = false;
+
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized[i];
+
+    if (char === '"') {
+      if (inQuotes && normalized[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      row.push(current);
+      current = '';
+      continue;
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && normalized[i + 1] === '\n') {
+        i++;
+      }
+      row.push(current);
+      if (row.some((cell) => cell.trim() !== '')) {
+        rows.push(row);
+      }
+      row = [];
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.length > 0 || row.length > 0) {
+    row.push(current);
+    if (row.some((cell) => cell.trim() !== '')) {
+      rows.push(row);
+    }
+  }
+
+  return rows;
+};
+
+const splitTags = (value: string) =>
+  value
+    .split(/[;,|]/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+const normalizePhone = (phone: string, defaultCountryCode: string) => {
+  const trimmed = phone.trim();
+  if (!trimmed) return '';
+  const withCountryCode = trimmed.startsWith('+')
+    ? trimmed
+    : `${defaultCountryCode}${trimmed}`;
+  return withCountryCode.replace(/\s/g, '');
+};
+
+const parseContactsFromCsv = (
+  csvText: string,
+  defaultCountryCode: string
+): Omit<Contact, 'id' | 'createdAt'>[] => {
+  const rows = parseCsv(csvText);
+  if (rows.length === 0) return [];
+
+  const normalizedRows = rows.map((row) => row.map((cell) => cell.trim()));
+  const headerRow = normalizedRows[0]?.map((cell) => cell.toLowerCase());
+  const hasHeader = headerRow?.some((cell) => ['name', 'phone', 'tags'].includes(cell));
+
+  const nameIndex = hasHeader && headerRow ? headerRow.indexOf('name') : -1;
+  const phoneIndex = hasHeader && headerRow ? headerRow.indexOf('phone') : -1;
+  const tagsIndex = hasHeader && headerRow ? headerRow.indexOf('tags') : -1;
+  const startIndex = hasHeader ? 1 : 0;
+
+  const getCellValue = (row: string[], index: number, fallbackIndex: number) => {
+    const value = index >= 0 ? row[index] : row[fallbackIndex];
+    return value ?? '';
+  };
+
+  const parsedContacts: Omit<Contact, 'id' | 'createdAt'>[] = [];
+
+  normalizedRows.slice(startIndex).forEach((row) => {
+    const nameValue = getCellValue(row, nameIndex, 0);
+    const phoneValue = getCellValue(row, phoneIndex, 1);
+    const tagsValue = getCellValue(row, tagsIndex, 2);
+    const phone = normalizePhone(phoneValue, defaultCountryCode);
+
+    if (!phone) return;
+
+    parsedContacts.push({
+      name: nameValue || 'Unknown',
+      phone,
+      tags: tagsValue ? splitTags(tagsValue) : [],
+    });
+  });
+
+  return parsedContacts;
+};
+
+const escapeCsvValue = (value: string) => {
+  const normalized = value.replace(/"/g, '""');
+  return /[",\n\r]/.test(normalized) ? `"${normalized}"` : normalized;
+};
+
 export default function Contacts() {
   const contacts = useAppStore((state) => state.contacts);
   const settings = useAppStore((state) => state.settings);
@@ -34,6 +148,9 @@ export default function Contacts() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [newContact, setNewContact] = useState({ name: '', phone: '', tags: '' });
   const [importText, setImportText] = useState('');
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const filteredContacts = contacts.filter(
     (c) =>
@@ -70,35 +187,95 @@ export default function Contacts() {
     });
   };
 
-  const handleImport = () => {
-    const lines = importText.trim().split('\n').filter(Boolean);
-    const newContacts = lines.map((line) => {
-      const [name, phone] = line.split(',').map(s => s.trim());
-      const formattedPhone = phone?.startsWith('+') 
-        ? phone 
-        : `${settings.defaultCountryCode}${phone}`;
-      return {
-        name: name || 'Unknown',
-        phone: formattedPhone?.replace(/\s/g, '') || '',
-        tags: [],
-      };
-    }).filter(c => c.phone);
-
-    if (newContacts.length === 0) {
+  const handleImport = async () => {
+    if (!importFile && !importText.trim()) {
       toast({
         title: "Import Failed",
-        description: "No valid contacts found. Use format: Name, Phone",
+        description: "Upload a CSV file or paste contact rows to import.",
         variant: "destructive",
       });
       return;
     }
 
-    importContacts(newContacts);
-    setImportText('');
-    setIsImportOpen(false);
+    setIsImporting(true);
+    try {
+      let csvText = importText;
+      if (importFile) {
+        csvText = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(importFile);
+        });
+      }
+
+      const newContacts = parseContactsFromCsv(csvText, settings.defaultCountryCode);
+
+      if (newContacts.length === 0) {
+        toast({
+          title: "Import Failed",
+          description: "No valid contacts found. Check your CSV columns.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      importContacts(newContacts);
+      setImportText('');
+      setImportFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setIsImportOpen(false);
+      toast({
+        title: "Contacts Imported",
+        description: `${newContacts.length} contacts imported successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Import Failed",
+        description: "Could not read the CSV file.",
+        variant: "destructive",
+      });
+      console.error('CSV import failed:', error);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleExport = () => {
+    if (filteredContacts.length === 0) {
+      toast({
+        title: "Export Failed",
+        description: "No contacts available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const header = ['name', 'phone', 'tags'];
+    const rows = filteredContacts.map((contact) => [
+      contact.name,
+      contact.phone,
+      contact.tags.join(', '),
+    ]);
+    const csvContent = [header, ...rows]
+      .map((row) => row.map((value) => escapeCsvValue(String(value))).join(','))
+      .join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'contacts.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
     toast({
-      title: "Contacts Imported",
-      description: `${newContacts.length} contacts imported successfully.`,
+      title: "Contacts Exported",
+      description: `${filteredContacts.length} contacts exported to CSV.`,
     });
   };
 
@@ -118,7 +295,7 @@ export default function Contacts() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="sm:size-default">
                   <Upload className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t('import')}</span>
+                  <span className="hidden sm:inline">{t('importCsv')}</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-[95vw] sm:max-w-lg">
@@ -127,20 +304,40 @@ export default function Contacts() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    {t('importFormat')}
+                    {t('importCsvFormat')}
                   </p>
+                  <div>
+                    <Label htmlFor="csvFile">{t('csvFile')}</Label>
+                    <Input
+                      id="csvFile"
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={(event) => setImportFile(event.target.files?.[0] ?? null)}
+                      className="mt-2"
+                    />
+                  </div>
                   <textarea
                     className="min-h-[200px] w-full rounded-lg border border-input bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="John Doe, +1234567890&#10;Jane Smith, +0987654321"
+                    placeholder="John Doe, +1234567890, vip;customer&#10;Jane Smith, +0987654321"
                     value={importText}
                     onChange={(e) => setImportText(e.target.value)}
                   />
-                  <Button onClick={handleImport} className="w-full" variant="whatsapp">
+                  <Button
+                    onClick={handleImport}
+                    className="w-full"
+                    variant="whatsapp"
+                    disabled={isImporting}
+                  >
                     {t('importContacts')}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
+            <Button variant="outline" size="sm" className="sm:size-default" onClick={handleExport}>
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('exportCsv')}</span>
+            </Button>
 
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
