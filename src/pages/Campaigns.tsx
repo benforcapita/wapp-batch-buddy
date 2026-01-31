@@ -44,6 +44,7 @@ export default function Campaigns() {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [apiTemplates, setApiTemplates] = useState<WhatsAppTemplate[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,6 +54,16 @@ export default function Campaigns() {
     templateLanguage: '',
     templateBody: '',
   });
+  const allTags = Array.from(
+    new Set(contacts.flatMap((contact) => contact.tags))
+  ).sort((a, b) => a.localeCompare(b));
+  const filteredContacts = selectedTags.length === 0
+    ? contacts
+    : contacts.filter((contact) => contact.tags.some((tag) => selectedTags.includes(tag)));
+  const filteredContactIds = filteredContacts.map((contact) => contact.id);
+  const areAllFilteredSelected =
+    filteredContacts.length > 0 &&
+    filteredContacts.every((contact) => selectedContacts.includes(contact.id));
 
   // Load templates from API
   const loadTemplates = async () => {
@@ -110,12 +121,25 @@ export default function Campaigns() {
     );
   };
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((value) => value !== tag) : [...prev, tag]
+    );
+  };
+
+  const clearTagFilters = () => {
+    setSelectedTags([]);
+  };
+
   const selectAllContacts = () => {
-    if (selectedContacts.length === contacts.length) {
-      setSelectedContacts([]);
-    } else {
-      setSelectedContacts(contacts.map(c => c.id));
+    if (filteredContacts.length === 0) return;
+
+    if (areAllFilteredSelected) {
+      setSelectedContacts((prev) => prev.filter((id) => !filteredContactIds.includes(id)));
+      return;
     }
+
+    setSelectedContacts((prev) => Array.from(new Set([...prev, ...filteredContactIds])));
   };
 
   const handleCreate = () => {
@@ -325,16 +349,51 @@ export default function Campaigns() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <Label>{t('selectRecipients')} ({selectedContacts.length} {t('selected')})</Label>
-                    <Button variant="ghost" size="sm" onClick={selectAllContacts}>
-                      {selectedContacts.length === contacts.length ? t('deselectAll') : t('selectAll')}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={selectAllContacts}
+                      disabled={filteredContacts.length === 0}
+                    >
+                      {areAllFilteredSelected ? t('deselectAll') : t('selectAll')}
                     </Button>
+                  </div>
+                  <div className="mb-3 rounded-lg border border-input bg-muted/30 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-xs sm:text-sm">{t('filterByTags')}</Label>
+                      {selectedTags.length > 0 && (
+                        <Button variant="ghost" size="sm" onClick={clearTagFilters}>
+                          {t('clearFilters')}
+                        </Button>
+                      )}
+                    </div>
+                    {allTags.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">{t('noTagsAvailable')}</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {allTags.map((tag) => (
+                          <label
+                            key={tag}
+                            className="flex items-center gap-2 rounded-md border border-input px-2 py-1 text-xs sm:text-sm text-muted-foreground"
+                          >
+                            <Checkbox
+                              checked={selectedTags.includes(tag)}
+                              onCheckedChange={() => toggleTag(tag)}
+                            />
+                            <span>{tag}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="max-h-[200px] overflow-y-auto rounded-lg border border-input bg-muted/30 p-3">
                     {contacts.length === 0 ? (
                       <p className="text-sm text-muted-foreground">{t('noContactsAvailable')}</p>
+                    ) : filteredContacts.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">{t('noContactsMatchFilters')}</p>
                     ) : (
                       <div className="space-y-2">
-                        {contacts.map((contact) => (
+                        {filteredContacts.map((contact) => (
                           <label
                             key={contact.id}
                             className="flex items-center gap-3 rounded-lg p-2 hover:bg-muted cursor-pointer transition-colors"

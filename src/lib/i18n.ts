@@ -37,6 +37,10 @@ export const translations = {
     tagsCommaSeparated: 'Tags (comma-separated)',
     importContactsTitle: 'Import Contacts',
     importFormat: 'Paste contacts in format: Name, Phone (one per line)',
+    importCsv: 'Import CSV',
+    exportCsv: 'Export CSV',
+    csvFile: 'CSV File',
+    importCsvFormat: 'Upload a CSV file with columns: name, phone, tags (optional), or paste rows below.',
     
     // Templates
     messageTemplates: 'Message Templates',
@@ -75,6 +79,10 @@ export const translations = {
     selectAll: 'Select All',
     deselectAll: 'Deselect All',
     noContactsAvailable: 'No contacts available. Add contacts first.',
+    filterByTags: 'Filter by tags',
+    clearFilters: 'Clear filters',
+    noTagsAvailable: 'No tags available. Add tags to contacts.',
+    noContactsMatchFilters: 'No contacts match the selected tags.',
     createCampaign: 'Create Campaign',
     recipients: 'recipients',
     sent: 'sent',
@@ -200,6 +208,10 @@ export const translations = {
     tagsCommaSeparated: 'תגיות (מופרדות בפסיק)',
     importContactsTitle: 'ייבא אנשי קשר',
     importFormat: 'הדבק אנשי קשר בפורמט: שם, טלפון (אחד בכל שורה)',
+    importCsv: 'ייבוא CSV',
+    exportCsv: 'ייצוא CSV',
+    csvFile: 'קובץ CSV',
+    importCsvFormat: 'העלה קובץ CSV עם עמודות: שם, טלפון, תגיות (אופציונלי), או הדבק שורות למטה.',
     
     // Templates
     messageTemplates: 'תבניות הודעות',
@@ -238,6 +250,10 @@ export const translations = {
     selectAll: 'בחר הכל',
     deselectAll: 'בטל בחירה',
     noContactsAvailable: 'אין אנשי קשר זמינים. הוסף אנשי קשר קודם.',
+    filterByTags: 'סנן לפי תגיות',
+    clearFilters: 'נקה מסננים',
+    noTagsAvailable: 'אין תגיות זמינות. הוסף תגיות לאנשי קשר.',
+    noContactsMatchFilters: 'אין אנשי קשר התואמים לתגיות שנבחרו.',
     createCampaign: 'צור קמפיין',
     recipients: 'נמענים',
     sent: 'נשלחו',
