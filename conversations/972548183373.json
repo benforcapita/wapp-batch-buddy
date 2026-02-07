@@ -1,0 +1,39 @@
+{
+  "phoneNumber": "972548183373",
+  "messages": [
+    {
+      "id": "wamid.HBgMOTcyNTQ4MTgzMzczFQIAERgSOUI5MTRFNTc2RTIwMEYxRjhGAA==",
+      "from": "me",
+      "timestamp": "2026-02-02T13:39:49.190Z",
+      "type": "text",
+      "text": "[Template: hello_world]",
+      "direction": "outgoing"
+    },
+    {
+      "id": "wamid.HBgMOTcyNTQ4MTgzMzczFQIAERgSQTc1RERDMkZFNjM1QTNCNjdBAA==",
+      "from": "me",
+      "timestamp": "2026-02-07T12:41:10.246Z",
+      "type": "text",
+      "text": "[Template: coordinator_update]",
+      "direction": "outgoing"
+    },
+    {
+      "id": "wamid.HBgMOTcyNTQ4MTgzMzczFQIAERgSMjZCMkI0MEM2MjYyMzZBODFFAA==",
+      "from": "me",
+      "timestamp": "2026-02-07T12:56:30.951Z",
+      "type": "text",
+      "text": "[Template: coordinator_update]",
+      "direction": "outgoing"
+    },
+    {
+      "id": "wamid.HBgMOTcyNTQ4MTgzMzczFQIAERgSMUYzMTZBMkIwRDk5RUI1OTEwAA==",
+      "from": "me",
+      "timestamp": "2026-02-07T12:58:33.766Z",
+      "type": "text",
+      "text": "[Template: coordinator_update]",
+      "direction": "outgoing"
+    }
+  ],
+  "lastMessageAt": "2026-02-07T12:58:33.766Z",
+  "createdAt": "2026-02-02T13:39:49.191Z"
+}

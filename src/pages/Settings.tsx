@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,24 @@ import { Label } from '@/components/ui/label';
 import { useAppStore } from '@/store/appStore';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { AlertCircle, Info, Globe, Download, Upload, RefreshCw, FileJson, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Info, Globe, Download, Upload, RefreshCw, FileJson, CheckCircle, Loader2, Webhook } from 'lucide-react';
 import { validateWhatsAppCredentials } from '@/lib/whatsapp-api';
+
+// API base URL for webhook server
+const API_BASE = import.meta.env.DEV ? 'http://localhost:3001' : '';
+
+// Sync webhook config with backend server
+const syncWebhookConfig = async (webhookVerifyToken: string) => {
+  try {
+    await fetch(`${API_BASE}/api/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhookVerifyToken }),
+    });
+  } catch (e) {
+    console.log('Could not sync webhook config with server:', e);
+  }
+};
 import {
   Select,
   SelectContent,
@@ -25,6 +41,31 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+
+  // Check if webhook server is running
+  useEffect(() => {
+    const checkServer = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/config`);
+        if (response.ok) {
+          setServerStatus('online');
+        } else {
+          setServerStatus('offline');
+        }
+      } catch {
+        setServerStatus('offline');
+      }
+    };
+    checkServer();
+  }, []);
+
+  // Sync webhook config with backend when it changes
+  useEffect(() => {
+    if (settings.webhookVerifyToken && serverStatus === 'online') {
+      syncWebhookConfig(settings.webhookVerifyToken);
+    }
+  }, [settings.webhookVerifyToken, serverStatus]);
 
   const handleTestConnection = async () => {
     if (!settings.phoneNumberId || !settings.accessToken) {
@@ -100,7 +141,7 @@ export default function Settings() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const config = JSON.parse(content);
@@ -110,6 +151,11 @@ export default function Settings() {
         }
         
         updateSettings(config.settings);
+        
+        // Sync webhook config with backend server
+        if (config.settings.webhookVerifyToken) {
+          await syncWebhookConfig(config.settings.webhookVerifyToken);
+        }
         
         toast({
           title: t('configImported'),
@@ -314,6 +360,66 @@ export default function Settings() {
                 ? t('apiConfigured')
                 : t('missingRequired')}
             </span>
+          </div>
+        </div>
+
+        {/* Webhook Settings */}
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+          <div>
+            <h3 className="text-base sm:text-lg font-semibold text-card-foreground flex items-center gap-2">
+              <Webhook className="h-4 w-4 sm:h-5 sm:w-5" />
+              {t('webhookSettings') || 'Webhook Settings'}
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              {t('webhookDescription') || 'Configure webhook to receive incoming messages'}
+            </p>
+          </div>
+
+          {/* Server status */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+            <div className={`h-2 w-2 rounded-full ${
+              serverStatus === 'online' ? 'bg-success' : 
+              serverStatus === 'checking' ? 'bg-warning animate-pulse' : 'bg-destructive'
+            }`} />
+            <span className="text-xs text-muted-foreground">
+              {serverStatus === 'online' 
+                ? (t('serverOnline') || 'Webhook server is running')
+                : serverStatus === 'checking'
+                ? (t('checkingServer') || 'Checking server...')
+                : (t('serverOffline') || 'Webhook server is offline - run: bun run dev')}
+            </span>
+          </div>
+          
+          <div>
+            <Label htmlFor="webhookVerifyToken" className="text-sm">
+              {t('webhookVerifyToken') || 'Webhook Verify Token'}
+            </Label>
+            <Input
+              id="webhookVerifyToken"
+              value={settings.webhookVerifyToken}
+              onChange={(e) => updateSettings({ webhookVerifyToken: e.target.value })}
+              placeholder="whatsapp_webhook_verify_token"
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('webhookVerifyTokenHint') || 'Use this token when configuring the webhook in Meta Developer Dashboard'}
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="webhookUrl" className="text-sm">
+              {t('webhookUrl') || 'Webhook URL (for reference)'}
+            </Label>
+            <Input
+              id="webhookUrl"
+              value={settings.webhookUrl}
+              onChange={(e) => updateSettings({ webhookUrl: e.target.value })}
+              placeholder="https://your-domain.com/webhook"
+              className="mt-2"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('webhookUrlHint') || 'Your public webhook URL. Use ngrok for local testing: npx ngrok http 3001'}
+            </p>
           </div>
         </div>
 

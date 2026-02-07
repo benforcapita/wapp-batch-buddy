@@ -63,7 +63,7 @@ const defaultSettings: Settings = {
   accessToken: '',
   apiVersion: 'v22.0',
   webhookUrl: '',
-  webhookVerifyToken: '',
+  webhookVerifyToken: 'whatsapp_webhook_verify_token',
   
   // Messaging
   defaultCountryCode: '+1',

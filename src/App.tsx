@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
 import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
+import Conversations from "./pages/Conversations";
 import Logs from "./pages/Logs";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/campaigns" element={<Campaigns />} />
+            <Route path="/conversations" element={<Conversations />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

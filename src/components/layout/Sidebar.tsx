@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Zap,
   Menu,
-  X
+  X,
+  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ export function Sidebar() {
     { path: '/contacts', icon: Users, labelKey: 'contacts' as const },
     { path: '/templates', icon: FileText, labelKey: 'templates' as const },
     { path: '/campaigns', icon: Send, labelKey: 'campaigns' as const },
+    { path: '/conversations', icon: MessageCircle, labelKey: 'conversations' as const },
     { path: '/logs', icon: History, labelKey: 'messageLogs' as const },
     { path: '/settings', icon: Settings, labelKey: 'settings' as const },
   ];

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Send, Play, Users, MessageSquare, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Send, Play, Users, MessageSquare, RefreshCw, Filter, X } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,8 @@ export default function Campaigns() {
     templateLanguage: '',
     templateBody: '',
   });
+
+  // Get all unique tags from contacts
   const allTags = Array.from(
     new Set(contacts.flatMap((contact) => contact.tags))
   ).sort((a, b) => a.localeCompare(b));
