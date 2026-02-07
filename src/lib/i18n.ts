@@ -5,6 +5,7 @@ export const translations = {
     contacts: 'Contacts',
     templates: 'Templates',
     campaigns: 'Campaigns',
+    conversations: 'Conversations',
     messageLogs: 'Message Logs',
     settings: 'Settings',
     readyToSend: 'Ready to send',
@@ -109,6 +110,18 @@ export const translations = {
     noMessagesYet: 'No messages sent yet. Start a campaign to see logs here.',
     noMessagesMatch: 'No messages match your search criteria.',
     
+    // Conversations
+    conversationsDescription: 'View incoming message replies',
+    refresh: 'Refresh',
+    searchConversations: 'Search conversations...',
+    noConversations: 'No conversations yet',
+    conversationsWillAppear: 'Incoming replies will appear here',
+    serverNotRunning: 'Make sure the server is running: bun run server',
+    selectConversation: 'Select a conversation to view messages',
+    replyFromMeta: 'Reply to messages from Meta Business Suite or WhatsApp Business app',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    
     // Settings
     configurePreferences: 'Configure your WhatsApp Business API settings',
     howItWorks: 'How it works',
@@ -132,6 +145,17 @@ export const translations = {
     accessTokenHint: 'Generate in API Setup or create a System User for permanent token',
     apiVersion: 'API Version',
     apiVersionHint: 'Current version: v18.0, v19.0, or v20.0',
+    
+    // Settings - Webhook
+    webhookSettings: 'Webhook Settings',
+    webhookDescription: 'Configure webhook to receive incoming message replies',
+    serverOnline: 'Webhook server is running',
+    serverOffline: 'Webhook server is offline - run: bun run dev',
+    checkingServer: 'Checking server...',
+    webhookVerifyToken: 'Webhook Verify Token',
+    webhookVerifyTokenHint: 'Use this token when configuring the webhook in Meta Developer Dashboard',
+    webhookUrl: 'Webhook URL (for reference)',
+    webhookUrlHint: 'Your public webhook URL. Use ngrok for local testing: npx ngrok http 3001',
     
     // Settings - Messaging
     messagingSettings: 'Messaging Settings',
@@ -185,6 +209,7 @@ export const translations = {
     contacts: 'אנשי קשר',
     templates: 'תבניות',
     campaigns: 'קמפיינים',
+    conversations: 'שיחות',
     messageLogs: 'היסטוריית הודעות',
     settings: 'הגדרות',
     readyToSend: 'מוכן לשליחה',
@@ -289,6 +314,18 @@ export const translations = {
     noMessagesYet: 'לא נשלחו הודעות עדיין. התחל קמפיין כדי לראות היסטוריה כאן.',
     noMessagesMatch: 'אין הודעות התואמות לקריטריוני החיפוש שלך.',
     
+    // Conversations
+    conversationsDescription: 'צפה בתשובות להודעות נכנסות',
+    refresh: 'רענן',
+    searchConversations: 'חפש שיחות...',
+    noConversations: 'אין שיחות עדיין',
+    conversationsWillAppear: 'תשובות נכנסות יופיעו כאן',
+    serverNotRunning: 'ודא שהשרת פועל: bun run server',
+    selectConversation: 'בחר שיחה כדי לצפות בהודעות',
+    replyFromMeta: 'השב להודעות מ-Meta Business Suite או אפליקציית WhatsApp Business',
+    today: 'היום',
+    yesterday: 'אתמול',
+    
     // Settings
     configurePreferences: 'הגדר את חיבור ה-WhatsApp Business API שלך',
     howItWorks: 'איך זה עובד',
@@ -312,6 +349,17 @@ export const translations = {
     accessTokenHint: 'צור ב-API Setup או צור System User לאסימון קבוע',
     apiVersion: 'גרסת API',
     apiVersionHint: 'גרסה נוכחית: v18.0, v19.0, או v20.0',
+    
+    // Settings - Webhook
+    webhookSettings: 'הגדרות Webhook',
+    webhookDescription: 'הגדר webhook לקבלת תשובות להודעות נכנסות',
+    serverOnline: 'שרת Webhook פועל',
+    serverOffline: 'שרת Webhook לא פעיל - הפעל: bun run dev',
+    checkingServer: 'בודק שרת...',
+    webhookVerifyToken: 'אסימון אימות Webhook',
+    webhookVerifyTokenHint: 'השתמש באסימון זה בהגדרת ה-webhook ב-Meta Developer Dashboard',
+    webhookUrl: 'כתובת Webhook (לעיון)',
+    webhookUrlHint: 'כתובת ה-webhook הציבורית שלך. השתמש ב-ngrok לבדיקה מקומית: npx ngrok http 3001',
     
     // Settings - Messaging
     messagingSettings: 'הגדרות הודעות',

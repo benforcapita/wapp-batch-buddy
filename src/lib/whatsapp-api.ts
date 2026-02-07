@@ -190,7 +190,25 @@ export const sendWhatsAppTemplateMessage = async (
       );
     }
 
-    return data as WhatsAppMessageResponse;
+    // Save outgoing message to conversations (fire and forget)
+    const messageResponse = data as WhatsAppMessageResponse;
+    try {
+      const serverUrl = import.meta.env.DEV ? 'http://localhost:3001' : '';
+      await fetch(`${serverUrl}/api/messages/outgoing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber: formattedPhone,
+          messageId: messageResponse.messages?.[0]?.id,
+          text: `[Template: ${templateName}]`,
+        }),
+      });
+    } catch (e) {
+      // Ignore errors - conversation saving is optional
+      console.log('Could not save outgoing message to conversations:', e);
+    }
+
+    return messageResponse;
   } catch (error) {
     if (error instanceof WhatsAppAPIError) {
       throw error;
